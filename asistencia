@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RayoApp — Portal de Empleados</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --yellow: #FACC15;
+            --yellow-dark: #f59e0b;
+            --yellow-pale: #fef9c3;
+            --yellow-glow: rgba(250,204,21,0.22);
+            --bg: #f5f6f8;
+            --surface: #ffffff;
+            --border: #e8eaed;
+            --text: #111827;
+            --muted: #6b7280;
+            --error: #ef4444;
+            --success: #22c55e;
+            --r: 20px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── AMBIENT BG ───────────────────────────── */
+        .bg-ambient {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 90% 55% at 8% 2%, rgba(250,204,21,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 55% 45% at 95% 98%, rgba(250,204,21,0.08) 0%, transparent 55%);
+        }
+
+        /* ── HEADER ──────────────────────────────── */
+        .site-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            height: 60px;
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 28px;
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-bolt { width: 22px; height: 38px; flex-shrink: 0; }
+
+        .logo-wordmark {
+            font-size: 11.5px; font-weight: 700;
+            letter-spacing: 0.22em; color: var(--text); text-indent: 0.22em;
+        }
+
+        .header-right {
+            margin-left: auto;
+            display: flex; align-items: center; gap: 16px;
+        }
+
+        .live-clock {
+            font-family: 'DM Mono', monospace;
+            font-size: 13px; color: var(--muted); letter-spacing: 0.03em;
+        }
+
+        /* ── PAGE ────────────────────────────────── */
+        .page {
+            position: relative; z-index: 1;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 90px 16px 40px;
+        }
+
+        /* ── VIEWS ───────────────────────────────── */
+        .view { display: none; width: 100%; }
+        .view.active {
+            display: block;
+            animation: viewIn 0.42s cubic-bezier(0.22,1,0.36,1) both;
+        }
+
+        @keyframes viewIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── CARD ────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border-radius: var(--r);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.09);
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        /* ── LOGIN CARD ──────────────────────────── */
+        #login-view { max-width: 420px; }
+
+        .login-hero {
+            padding: 38px 36px 28px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(160deg, #fafafa 0%, #fff 100%);
+        }
+
+        .bolt-badge {
+            width: 54px; height: 54px;
+            background: var(--yellow);
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 22px;
+            box-shadow: 0 6px 20px var(--yellow-glow);
+        }
+
+        .bolt-badge svg { width: 28px; height: 28px; }
+
+        .login-title {
+            font-size: 23px; font-weight: 700;
+            letter-spacing: -0.025em; color: var(--text);
+            margin-bottom: 7px;
+        }
+
+        .login-sub {
+            font-size: 14px; color: var(--muted); line-height: 1.55;
+        }
+
+        .login-body { padding: 28px 36px 34px; }
+
+        /* ── FORM ────────────────────────────────── */
+        .field { margin-bottom: 18px; }
+
+        .field-label {
+            display: block; margin-bottom: 7px;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            color: var(--muted);
+        }
+
+        .field-wrap { position: relative; }
+
+        .field-ico {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            width: 17px; height: 17px; color: #b0b7c0; pointer-events: none;
+        }
+
+        .field-input {
+            width: 100%; height: 48px;
+            padding: 0 16px 0 43px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif; font-size: 14.5px;
+            color: var(--text); background: #fafbfc;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            outline: none;
+        }
+
+        .field-input:focus {
+            border-color: var(--yellow); background: #fff;
+            box-shadow: 0 0 0 4px var(--yellow-glow);
+        }
+
+        .field-input.is-error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 4px rgba(239,68,68,0.1);
+        }
+
+        .field-err {
+            font-size: 12px; color: var(--error);
+            margin-top: 6px; display: none;
+        }
+
+        .field-err.show { display: block; }
+
+        /* ── BUTTON ──────────────────────────────── */
+        .btn {
+            width: 100%; height: 50px;
+            border: none; border-radius: 13px;
+            font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all 0.22s;
+            display: flex; align-items: center; justify-content: center; gap: 9px;
+            letter-spacing: -0.01em; position: relative;
+        }
+
+        .btn-primary { background: var(--yellow); color: #000; }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--yellow-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px var(--yellow-glow);
+        }
+        .btn-primary:active:not(:disabled) { transform: translateY(0); }
+        .btn-primary:disabled { opacity: 0.65; pointer-events: none; }
+
+        /* Spinner inside button */
+        .btn-spinner {
+            width: 19px; height: 19px;
+            border: 2.5px solid rgba(0,0,0,0.12);
+            border-top-color: #000; border-radius: 50%;
+            animation: spin 0.7s linear infinite; display: none;
+        }
+        .btn.loading .btn-spinner { display: block; }
+        .btn.loading .btn-lbl { display: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── GLOBAL ERROR ────────────────────────── */
+        .global-err {
+            font-size: 13px; color: var(--error);
+            background: #fff1f2; border: 1px solid #fecaca;
+            border-radius: 10px; padding: 10px 14px;
+            margin-bottom: 14px; display: none;
+        }
+        .global-err.show { display: block; }
+
+        .footer-hint {
+            text-align: center; font-size: 12px; color: var(--muted); margin-top: 16px;
+        }
+
+        /* ── DASHBOARD CARD ──────────────────────── */
+        #dashboard-view { max-width: 480px; }
+
+        .dash-welcome {
+            background: linear-gradient(130deg, var(--yellow-pale) 0%, #fef3c7 100%);
+            border-bottom: 1px solid #fde68a;
+            padding: 22px 30px;
+            display: flex; align-items: center; gap: 16px;
+        }
+
+        .emp-avatar {
+            width: 58px; height: 58px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 21px; font-weight: 800; flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            letter-spacing: -1px;
+        }
+
+        .welcome-info { flex: 1; min-width: 0; }
+
+        .welcome-name {
+            font-size: 17px; font-weight: 700; color: var(--text);
+            letter-spacing: -0.02em; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .welcome-area { font-size: 13px; color: #92400e; margin-top: 3px; }
+
+        /* Status pill */
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 5px 13px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; flex-shrink: 0;
+        }
+        .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+        .status-out { background: #f3f4f6; color: var(--muted); }
+        .status-out .dot { background: #9ca3af; }
+        .status-in  { background: #dcfce7; color: #166534; }
+        .status-in  .dot {
+            background: var(--success);
+            animation: pulseDot 2s infinite;
+        }
+        @keyframes pulseDot {
+            0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+            50%      { box-shadow: 0 0 0 5px rgba(34,197,94,0.0); }
+        }
+
+        /* Dash body */
+        .dash-body { padding: 24px 30px 30px; }
+
+        /* Time display */
+        .time-display { margin-bottom: 22px; }
+
+        .time-label {
+            font-size: 10.5px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+            margin-bottom: 5px;
+        }
+
+        .big-time {
+            font-family: 'DM Mono', monospace;
+            font-size: 40px; font-weight: 500;
+            color: var(--text); letter-spacing: -0.02em; line-height: 1;
+        }
+
+        .big-date { font-size: 13px; color: var(--muted); margin-top: 5px; }
+
+        /* Action buttons */
+        .action-btn {
+            width: 100%; height: 62px;
+            border-radius: 15px; border: none;
+            font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: all 0.25s;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            letter-spacing: -0.01em; margin-bottom: 11px;
+        }
+
+        .action-btn svg { flex-shrink: 0; }
+
+        .action-btn .btn-spinner { width: 21px; height: 21px; border-width: 3px; }
+        .action-btn.loading .btn-lbl { display: none; }
+        .action-btn.loading .btn-spinner { display: block; }
+        .action-btn:disabled { opacity: 0.55; pointer-events: none; }
+
+        .btn-checkin {
+            background: var(--yellow); color: #000;
+            box-shadow: 0 4px 18px var(--yellow-glow);
+        }
+        .btn-checkin:hover:not(:disabled) {
+            background: var(--yellow-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px var(--yellow-glow);
+        }
+
+        .btn-checkout {
+            background: #fff; color: var(--error);
+            border: 2px solid #fca5a5;
+        }
+        .btn-checkout:hover:not(:disabled) {
+            background: #fff1f2;
+            border-color: var(--error);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239,68,68,0.12);
+        }
+        .btn-checkout .btn-spinner { border-color: rgba(239,68,68,0.15); border-top-color: var(--error); }
+
+        /* History */
+        .history-section {
+            margin-top: 22px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .history-heading {
+            font-size: 10.5px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--muted); margin-bottom: 12px;
+        }
+
+        .history-scroll {
+            display: flex; flex-direction: column; gap: 7px;
+            max-height: 220px; overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .h-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 13px; background: var(--bg);
+            border-radius: 10px; border: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .h-left { display: flex; align-items: center; gap: 10px; }
+
+        .h-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .h-dot.in  { background: var(--success); }
+        .h-dot.out { background: var(--error); }
+
+        .h-type { font-weight: 600; color: var(--text); }
+
+        .h-time {
+            font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted);
+        }
+
+        .h-date {
+            font-size: 11px; color: var(--muted); background: var(--surface);
+            padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border);
+        }
+
+        .h-empty {
+            text-align: center; padding: 18px; font-size: 13px; color: var(--muted);
+        }
+
+        /* Signout */
+        .signout-row { margin-top: 16px; display: flex; justify-content: center; }
+
+        .btn-signout {
+            background: none; border: none;
+            font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--muted);
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 8px; transition: all 0.2s;
+        }
+        .btn-signout:hover { color: var(--text); background: var(--bg); }
+
+        /* ── TOAST ───────────────────────────────── */
+        .toast {
+            position: fixed; bottom: 28px; left: 50%;
+            transform: translateX(-50%) translateY(16px);
+            background: #111827; color: #fff;
+            padding: 11px 22px; border-radius: 40px;
+            font-size: 13px; font-weight: 500;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+            z-index: 9999; opacity: 0;
+            transition: all 0.38s cubic-bezier(0.34,1.56,0.64,1);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.ok   { background: #14532d; }
+        .toast.err  { background: #7f1d1d; }
+    </style>
+</head>
+<body>
+
+<div class="bg-ambient"></div>
+
+<!-- Header -->
+<header class="site-header">
+    <svg class="logo-bolt" viewBox="0 0 100 200">
+        <path d="M60,10 L25,110 L50,110 L40,190 L75,90 L50,90 Z" fill="#FACC15"/>
+    </svg>
+    <span class="logo-wordmark">RAYOAPP</span>
+    <div class="header-right">
+        <span class="live-clock" id="hdr-clock"></span>
+    </div>
+</header>
+
+<main class="page">
+
+    <!-- ═══════════════ LOGIN ═══════════════ -->
+    <div id="login-view" class="view active">
+        <div class="card">
+            <div class="login-hero">
+                <div class="bolt-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                </div>
+                <h1 class="login-title">Acceso al portal</h1>
+                <p class="login-sub">Ingresa con tu correo corporativo y tu número de cédula para registrar tu asistencia.</p>
+            </div>
+            <div class="login-body">
+                <div class="global-err" id="global-err"></div>
+                <div class="field">
+                    <label class="field-label" for="f-correo">Correo electrónico</label>
+                    <div class="field-wrap">
+                        <svg class="field-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                        </svg>
+                        <input type="email" id="f-correo" class="field-input" placeholder="tu@correo.com" autocomplete="email">
+                    </div>
+                    <div class="field-err" id="err-correo"></div>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="f-cedula">Número de cédula</label>
+                    <div class="field-wrap">
+                        <svg class="field-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="5" width="20" height="14" rx="2"/>
+                            <circle cx="9" cy="12" r="2.5"/>
+                            <path d="M14 10h4M14 14h4"/>
+                        </svg>
+                        <input type="text" id="f-cedula" class="field-input" placeholder="Ej. 16902682" inputmode="numeric">
+                    </div>
+                    <div class="field-err" id="err-cedula"></div>
+                </div>
+                <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
+                    <div class="btn-spinner"></div>
+                    <span class="btn-lbl">Ingresar al portal</span>
+                </button>
+                <p class="footer-hint">¿Problemas para ingresar? Contacta a tu supervisor.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ DASHBOARD ═══════════════ -->
+    <div id="dashboard-view" class="view">
+        <div class="card">
+            <!-- Welcome strip -->
+            <div class="dash-welcome">
+                <div class="emp-avatar" id="emp-avatar"></div>
+                <div class="welcome-info">
+                    <div class="welcome-name" id="emp-nombre"></div>
+                    <div class="welcome-area" id="emp-area"></div>
+                </div>
+                <div id="status-pill" class="status-pill status-out">
+                    <span class="dot"></span>
+                    <span id="status-lbl">Fuera</span>
+                </div>
+            </div>
+
+            <div class="dash-body">
+                <!-- Time -->
+                <div class="time-display">
+                    <div class="time-label">Hora actual</div>
+                    <div class="big-time" id="dash-clock">--:--:--</div>
+                    <div class="big-date" id="dash-date"></div>
+                </div>
+
+                <!-- Check-in button -->
+                <button class="action-btn btn-checkin" id="btn-in" onclick="doCheckIn()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    <div class="btn-spinner"></div>
+                    <span class="btn-lbl">Registrar Entrada</span>
+                </button>
+
+                <!-- Check-out button -->
+                <button class="action-btn btn-checkout" id="btn-out" onclick="doCheckOut()" style="display:none;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <div class="btn-spinner"></div>
+                    <span class="btn-lbl">Registrar Salida</span>
+                </button>
+
+                <!-- History -->
+                <div class="history-section">
+                    <div class="history-heading">Registros recientes</div>
+                    <div id="history-scroll" class="history-scroll">
+                        <div class="h-empty">Cargando registros…</div>
+                    </div>
+                </div>
+
+                <!-- Signout -->
+                <div class="signout-row">
+                    <button class="btn-signout" onclick="doSignOut()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        Cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+// ──────────────────────────────────────────────
+// ⚙️  CONFIGURACIÓN
+// ──────────────────────────────────────────────
+// Después de desplegar el Apps Script (instrucciones al final),
+// pega la URL web aquí:
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHGC3Yr_4u6sa1cvirO_1qRAbCaSE2rzRAH8fPnsyQAxMDViBk4Zgqqoj0w98YdsLS6w/exec';
+
+// ──────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────
+let currentEmp  = null;
+let checkedIn   = false;
+let records     = [];
+
+// ──────────────────────────────────────────────
+// CLOCK
+// ──────────────────────────────────────────────
+function tickClock() {
+    const now  = new Date();
+    const hms  = now.toLocaleTimeString('es-VE', { hour12: false });
+    const full = now.toLocaleDateString('es-VE', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    const cap  = s => s.charAt(0).toUpperCase() + s.slice(1);
+    const hdr  = document.getElementById('hdr-clock');
+    const dc   = document.getElementById('dash-clock');
+    const dd   = document.getElementById('dash-date');
+    if (hdr) hdr.textContent = hms;
+    if (dc)  dc.textContent  = hms;
+    if (dd)  dd.textContent  = cap(full);
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+// ──────────────────────────────────────────────
+// VIEWS
+// ──────────────────────────────────────────────
+function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const el = document.getElementById(id);
+    el.classList.remove('active');
+    void el.offsetWidth;
+    el.classList.add('active');
+}
+
+// ──────────────────────────────────────────────
+// TOAST
+// ──────────────────────────────────────────────
+let _toastT;
+function toast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    clearTimeout(_toastT);
+    _toastT = setTimeout(() => t.className = 'toast', 3400);
+}
+
+// ──────────────────────────────────────────────
+// AVATAR
+// ──────────────────────────────────────────────
+const PALETTES = [
+    { bg:'linear-gradient(135deg,#fde68a,#f59e0b)', fg:'#78350f' },
+    { bg:'linear-gradient(135deg,#a5f3fc,#0891b2)', fg:'#fff' },
+    { bg:'linear-gradient(135deg,#bbf7d0,#16a34a)', fg:'#fff' },
+    { bg:'linear-gradient(135deg,#fecaca,#dc2626)', fg:'#fff' },
+    { bg:'linear-gradient(135deg,#e9d5ff,#7c3aed)', fg:'#fff' },
+    { bg:'linear-gradient(135deg,#fed7aa,#ea580c)', fg:'#fff' },
+];
+
+function palette(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h<<5)-h);
+    return PALETTES[Math.abs(h) % PALETTES.length];
+}
+
+function initials(name) {
+    return name.split(' ').map(p=>p[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
+}
+
+// ──────────────────────────────────────────────
+// LOGIN
+// ──────────────────────────────────────────────
+async function doLogin() {
+    const correo = document.getElementById('f-correo').value.trim().toLowerCase();
+    const cedula = document.getElementById('f-cedula').value.trim();
+    const btn    = document.getElementById('login-btn');
+
+    // Clear errors
+    ['err-correo','err-cedula'].forEach(id => {
+        const el = document.getElementById(id);
+        el.textContent = ''; el.classList.remove('show');
+    });
+    ['f-correo','f-cedula'].forEach(id => document.getElementById(id).classList.remove('is-error'));
+    const ge = document.getElementById('global-err');
+    ge.textContent = ''; ge.classList.remove('show');
+
+    // Validate
+    if (!correo || !correo.includes('@')) {
+        document.getElementById('f-correo').classList.add('is-error');
+        const e = document.getElementById('err-correo');
+        e.textContent = 'Ingresa un correo válido.'; e.classList.add('show'); return;
+    }
+    if (!cedula) {
+        document.getElementById('f-cedula').classList.add('is-error');
+        const e = document.getElementById('err-cedula');
+        e.textContent = 'Ingresa tu número de cédula.'; e.classList.add('show'); return;
+    }
+
+    btn.classList.add('loading'); btn.disabled = true;
+
+    try {
+        const res = await api('login', { correo, cedula });
+        if (res.success) {
+            currentEmp = res.employee;
+            buildDashboard();
+            showView('dashboard-view');
+        } else if (res.reason === 'correo') {
+            document.getElementById('f-correo').classList.add('is-error');
+            const e = document.getElementById('err-correo');
+            e.textContent = 'Correo no encontrado en el sistema.'; e.classList.add('show');
+        } else if (res.reason === 'cedula') {
+            document.getElementById('f-cedula').classList.add('is-error');
+            const e = document.getElementById('err-cedula');
+            e.textContent = 'Cédula incorrecta para este correo.'; e.classList.add('show');
+        } else {
+            ge.textContent = res.error || 'Error desconocido. Intenta de nuevo.'; ge.classList.add('show');
+        }
+    } catch(e) {
+        ge.textContent = 'Error de conexión. Verifica tu internet.'; ge.classList.add('show');
+    } finally {
+        btn.classList.remove('loading'); btn.disabled = false;
+    }
+}
+
+// ──────────────────────────────────────────────
+// DASHBOARD
+// ──────────────────────────────────────────────
+function buildDashboard() {
+    const p = palette(currentEmp.nombre);
+    const av = document.getElementById('emp-avatar');
+    av.textContent    = initials(currentEmp.nombre);
+    av.style.background = p.bg;
+    av.style.color      = p.fg;
+    document.getElementById('emp-nombre').textContent = currentEmp.nombre;
+    document.getElementById('emp-area').textContent   = currentEmp.area;
+    loadRecords();
+}
+
+// ──────────────────────────────────────────────
+// RECORDS
+// ──────────────────────────────────────────────
+async function loadRecords() {
+    document.getElementById('history-scroll').innerHTML = '<div class="h-empty">Cargando registros…</div>';
+    try {
+        const res = await api('getRecords', { cedula: currentEmp.cedula });
+        if (res.success) {
+            records = res.records || [];
+            renderRecords();
+            syncStatus();
+        }
+    } catch(e) { console.error(e); }
+}
+
+function syncStatus() {
+    // Look at the last record for today
+    const today  = new Date().toLocaleDateString('es-VE');
+    const todayR = records.filter(r => r.fecha === today);
+    const last   = todayR[todayR.length - 1];
+    setStatus(last && last.tipo === 'ENTRADA');
+}
+
+function setStatus(isIn) {
+    checkedIn = isIn;
+    const pill = document.getElementById('status-pill');
+    const lbl  = document.getElementById('status-lbl');
+    const btnI = document.getElementById('btn-in');
+    const btnO = document.getElementById('btn-out');
+    if (isIn) {
+        pill.className = 'status-pill status-in';
+        lbl.textContent = 'En turno';
+        btnI.style.display = 'none';
+        btnO.style.display = 'flex';
+    } else {
+        pill.className = 'status-pill status-out';
+        lbl.textContent = 'Fuera';
+        btnI.style.display = 'flex';
+        btnO.style.display = 'none';
+    }
+}
+
+function renderRecords() {
+    const el = document.getElementById('history-scroll');
+    if (!records.length) {
+        el.innerHTML = '<div class="h-empty">Sin registros aún.</div>'; return;
+    }
+    const shown = [...records].reverse().slice(0, 15);
+    el.innerHTML = shown.map(r => `
+        <div class="h-item">
+            <div class="h-left">
+                <div class="h-dot ${r.tipo === 'ENTRADA' ? 'in' : 'out'}"></div>
+                <span class="h-type">${r.tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}</span>
+                <span class="h-time">${r.hora}</span>
+            </div>
+            <span class="h-date">${r.fecha}</span>
+        </div>
+    `).join('');
+}
+
+// ──────────────────────────────────────────────
+// CHECK IN
+// ──────────────────────────────────────────────
+async function doCheckIn() {
+    const btn = document.getElementById('btn-in');
+    btn.disabled = true; btn.classList.add('loading');
+    const now   = new Date();
+    const fecha = now.toLocaleDateString('es-VE');
+    const hora  = now.toLocaleTimeString('es-VE', { hour12: false });
+    try {
+        const res = await api('register', {
+            nombre: currentEmp.nombre,
+            cedula: currentEmp.cedula,
+            area:   currentEmp.area,
+            tipo:   'ENTRADA', fecha, hora
+        });
+        if (res.success) {
+            records.push({ tipo:'ENTRADA', fecha, hora });
+            setStatus(true); renderRecords();
+            toast('✅ Entrada registrada a las ' + hora, 'ok');
+        } else {
+            toast('❌ ' + (res.error || 'Error al registrar'), 'err');
+        }
+    } catch(e) { toast('❌ Error de conexión al registrar entrada.', 'err'); }
+    finally { btn.disabled = false; btn.classList.remove('loading'); }
+}
+
+// ──────────────────────────────────────────────
+// CHECK OUT
+// ──────────────────────────────────────────────
+async function doCheckOut() {
+    const btn = document.getElementById('btn-out');
+    btn.disabled = true; btn.classList.add('loading');
+    const now   = new Date();
+    const fecha = now.toLocaleDateString('es-VE');
+    const hora  = now.toLocaleTimeString('es-VE', { hour12: false });
+    try {
+        const res = await api('register', {
+            nombre: currentEmp.nombre,
+            cedula: currentEmp.cedula,
+            area:   currentEmp.area,
+            tipo:   'SALIDA', fecha, hora
+        });
+        if (res.success) {
+            records.push({ tipo:'SALIDA', fecha, hora });
+            setStatus(false); renderRecords();
+            toast('👋 Salida registrada a las ' + hora, 'ok');
+        } else {
+            toast('❌ ' + (res.error || 'Error al registrar'), 'err');
+        }
+    } catch(e) { toast('❌ Error de conexión al registrar salida.', 'err'); }
+    finally { btn.disabled = false; btn.classList.remove('loading'); }
+}
+
+// ──────────────────────────────────────────────
+// SIGN OUT
+// ──────────────────────────────────────────────
+function doSignOut() {
+    currentEmp = null; checkedIn = false; records = [];
+    document.getElementById('f-correo').value = '';
+    document.getElementById('f-cedula').value = '';
+    showView('login-view');
+    toast('Sesión cerrada correctamente.');
+}
+
+// ──────────────────────────────────────────────
+// ENTER KEY
+// ──────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('login-view').classList.contains('active'))
+        doLogin();
+});
+
+// ──────────────────────────────────────────────
+// API  (Apps Script backend o Demo mode)
+// ──────────────────────────────────────────────
+async function api(action, params = {}) {
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'TU_APPS_SCRIPT_URL_AQUI')
+        return demoApi(action, params);
+
+    const qs  = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`, { redirect: 'follow' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+}
+
+// ──────────────────────────────────────────────
+// DEMO MODE  (funciona sin backend)
+// ──────────────────────────────────────────────
+const DEMO_EMPS = [
+    { nombre:'Elias Miguel Montilla Goodridge', cedula:'16902682', correo:'eliasmontillaflash@gmail.com',  area:'Operador',            fecha_inicio:'25/9/2025',   fecha_cumple:'25/2/1986'  },
+    { nombre:'Felix Enrique Perez Estrada',     cedula:'30431036', correo:'felixperezflash@gmail.com',    area:'Enrutador',           fecha_inicio:'01/15/2026',  fecha_cumple:'10/7/2003'  },
+    { nombre:'Yelitza Susana Marrufo Escalona', cedula:'15699181', correo:'susanamarrufoflash@gmail.com', area:'Operador',            fecha_inicio:'17/10/2025',  fecha_cumple:'19/10/1980' },
+    { nombre:'Santiago Johan Aragon Sanchez',   cedula:'31828558', correo:'santi200679@gmail.com',        area:'Sistemas y Mejoras',  fecha_inicio:'24/3/2026',   fecha_cumple:'24/3/2026'  },
+];
+
+let _demoRecs = [];
+
+async function demoApi(action, p) {
+    await new Promise(r => setTimeout(r, 600));
+    if (action === 'login') {
+        const emp = DEMO_EMPS.find(e => e.correo.toLowerCase() === p.correo);
+        if (!emp) return { success:false, reason:'correo' };
+        if (emp.cedula !== p.cedula) return { success:false, reason:'cedula' };
+        return { success:true, employee: emp };
+    }
+    if (action === 'getRecords') {
+        return { success:true, records: _demoRecs.filter(r => r.cedula === p.cedula) };
+    }
+    if (action === 'register') {
+        _demoRecs.push({ ...p });
+        return { success:true };
+    }
+    return { success:false, error:'Acción desconocida.' };
+}
