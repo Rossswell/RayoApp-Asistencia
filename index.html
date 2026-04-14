@@ -864,3 +864,94 @@ async function demoApi(action, p) {
     }
     return { success:false, error:'Acción desconocida.' };
 }
+</script>
+
+<!--
+╔══════════════════════════════════════════════════════════════╗
+║        CÓDIGO PARA GOOGLE APPS SCRIPT (BACKEND)             ║
+║  1. Abre https://script.google.com → Nuevo proyecto         ║
+║  2. Pega el código de abajo en Code.gs                       ║
+║  3. Implementar → Nueva implementación → Aplicación web     ║
+║     · Ejecutar como: Yo                                      ║
+║     · Acceso: Cualquier persona                              ║
+║  4. Copia la URL y pégala en APPS_SCRIPT_URL arriba         ║
+╚══════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━  Code.gs  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const SPREADSHEET_ID = '1O35ZWq2yEAW-5FOJsby2Kszo6WP3_0nqVGp4yd0q4Lk';
+const EMP_SHEET      = '👤EMPLEADOS FLASH HIGH';
+const ATT_SHEET      = 'ASISTENCIA';
+
+function doGet(e) {
+  const action = e.parameter.action;
+  try {
+    if (action === 'login')      return json(login(e.parameter));
+    if (action === 'register')   return json(register(e.parameter));
+    if (action === 'getRecords') return json(getRecords(e.parameter));
+    return json({ success:false, error:'Unknown action' });
+  } catch(err) {
+    return json({ success:false, error:err.message });
+  }
+}
+
+function json(data) {
+  const output = ContentService.createTextOutput(JSON.stringify(data));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
+}
+
+function login(p) {
+  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(EMP_SHEET);
+  const rows  = sheet.getRange('A3:G30').getValues();
+  for (const row of rows) {
+    if (!row[0]) continue;
+    const correo = (row[3]||'').toString().trim().toLowerCase();
+    const cedula = (row[1]||'').toString().trim();
+    if (correo === p.correo.trim().toLowerCase()) {
+      if (cedula === p.cedula.trim())
+        return { success:true, employee:{
+          nombre:row[0], cedula:row[1], telefono:row[2],
+          correo:row[3], area:row[4],
+          fecha_inicio:row[5], fecha_cumple:row[6]
+        }};
+      return { success:false, reason:'cedula' };
+    }
+  }
+  return { success:false, reason:'correo' };
+}
+
+function register(p) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(ATT_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(ATT_SHEET);
+    sheet.appendRow(['Nombre','Cédula','Área','Tipo','Fecha','Hora','Timestamp']);
+    sheet.getRange('1:1').setFontWeight('bold');
+  }
+  sheet.appendRow([p.nombre, p.cedula, p.area, p.tipo,
+                   p.fecha, p.hora, new Date().toISOString()]);
+  return { success:true };
+}
+
+function getRecords(p) {
+  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(ATT_SHEET);
+  if (!sheet) return { success:true, records:[] };
+  const data    = sheet.getDataRange().getValues();
+  const records = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if ((row[1]||'').toString().trim() === (p.cedula||'').toString().trim())
+      records.push({ nombre:row[0], cedula:row[1], area:row[2],
+                     tipo:row[3], fecha:row[4], hora:row[5] });
+  }
+  return { success:true, records };
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
+
+</body>
+</html>
