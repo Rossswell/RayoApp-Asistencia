@@ -887,7 +887,7 @@
         // ──────────────────────────────────────────────
         // Después de desplegar el Apps Script (instrucciones al final),
         // pega la URL web aquí:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw61Tc3j_XHNboN8s1clzoOs08rBXtyTfK6WV-xQxsVK7hOoguWYgOWVsMrz31kYAAyEw/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpobam_Ub8pfMkNgXPrfi4Pbp1k_7Y22kQytAT-pJfcfXZSt2JiztD-34I9mApy5_mkw/exec';
 
         // ──────────────────────────────────────────────
         // STATE
@@ -1209,7 +1209,9 @@
             const qs = new URLSearchParams({ action, ...params }).toString();
             const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`, { redirect: 'follow' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.json();
+            const data = await res.json();
+            if (!data.success) console.error('Backend Error:', data);
+            return data;
         }
 
         // ──────────────────────────────────────────────
