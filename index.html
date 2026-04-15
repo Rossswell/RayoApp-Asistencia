@@ -342,318 +342,360 @@
         }
 
         /* ── DASHBOARD CARD ──────────────────────── */
+        /* ── DASHBOARD LAYOUT ────────────────────── */
         #dashboard-view {
-            max-width: 480px;
+            max-width: 900px;
         }
 
-        .dash-welcome {
+        #dashboard-view .card {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            min-height: 500px;
+        }
+
+        @media (max-width: 768px) {
+            #dashboard-view .card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dash-sidebar {
             background: linear-gradient(130deg, var(--yellow-pale) 0%, #fef3c7 100%);
-            border-bottom: 1px solid #fde68a;
-            padding: 22px 30px;
+            border-right: 1px solid #fde68a;
+            padding: 40px 30px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 16px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .dash-sidebar {
+                border-right: none;
+                border-bottom: 1px solid #fde68a;
+                padding: 30px 20px;
+            }
         }
 
         .emp-avatar {
-            width: 58px;
-            height: 58px;
-            border-radius: 16px;
+            width: 100px;
+            height: 100px;
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 21px;
+            font-size: 36px;
             font-weight: 800;
-            flex-shrink: 0;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            margin-bottom: 24px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
             letter-spacing: -1px;
         }
 
-        .welcome-info {
-            flex: 1;
-            min-width: 0;
+        .welcome-msg {
+            font-size: 14px;
+            font-weight: 600;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
         }
 
         .welcome-name {
-            font-size: 17px;
+            font-size: 22px;
             font-weight: 700;
             color: var(--text);
-            letter-spacing: -0.02em;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.2;
+            margin-bottom: 4px;
         }
 
         .welcome-area {
-            font-size: 13px;
+            font-size: 14px;
+            color: #b45309;
+            margin-bottom: 30px;
+        }
+
+        .schedule-box {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: left;
+        }
+
+        .sch-label {
+            font-size: 11px;
+            font-weight: 700;
             color: #92400e;
-            margin-top: 3px;
-        }
-
-        /* Status pill */
-        .status-pill {
-            display: inline-flex;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            display: flex;
             align-items: center;
-            gap: 7px;
-            padding: 5px 13px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            flex-shrink: 0;
+            gap: 6px;
         }
 
-        .status-pill .dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
+        .sch-content {
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.5;
+            white-space: pre-line;
         }
 
-        .status-out {
-            background: #f3f4f6;
-            color: var(--muted);
+        /* Dash main area */
+        .dash-main {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
         }
 
-        .status-out .dot {
-            background: #9ca3af;
-        }
-
-        .status-in {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-in .dot {
-            background: var(--success);
-            animation: pulseDot 2s infinite;
-        }
-
-        @keyframes pulseDot {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+        @media (max-width: 768px) {
+            .dash-main {
+                padding: 30px 20px;
             }
-
-            50% {
-                box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.0);
-            }
-        }
-
-        /* Dash body */
-        .dash-body {
-            padding: 24px 30px 30px;
         }
 
         /* Time display */
-        .time-display {
-            margin-bottom: 22px;
+        .main-time {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 34px;
         }
 
-        .time-label {
-            font-size: 10.5px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--muted);
-            margin-bottom: 5px;
-        }
-
-        .big-time {
+        .time-group .big-time {
             font-family: 'DM Mono', monospace;
-            font-size: 40px;
+            font-size: 48px;
             font-weight: 500;
             color: var(--text);
             letter-spacing: -0.02em;
             line-height: 1;
         }
 
-        .big-date {
-            font-size: 13px;
+        .time-group .big-date {
+            font-size: 14px;
             color: var(--muted);
-            margin-top: 5px;
+            margin-top: 8px;
         }
 
-        /* Action buttons */
-        .action-btn {
-            width: 100%;
-            height: 62px;
-            border-radius: 15px;
-            border: none;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.25s;
+        /* Active status pill */
+        .status-badge {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
-            letter-spacing: -0.01em;
-            margin-bottom: 11px;
-        }
-
-        .action-btn svg {
-            flex-shrink: 0;
-        }
-
-        .action-btn .btn-spinner {
-            width: 21px;
-            height: 21px;
-            border-width: 3px;
-        }
-
-        .action-btn.loading .btn-lbl {
-            display: none;
-        }
-
-        .action-btn.loading .btn-spinner {
-            display: block;
-        }
-
-        .action-btn:disabled {
-            opacity: 0.55;
-            pointer-events: none;
-        }
-
-        .btn-checkin {
-            background: var(--yellow);
-            color: #000;
-            box-shadow: 0 4px 18px var(--yellow-glow);
-        }
-
-        .btn-checkin:hover:not(:disabled) {
-            background: var(--yellow-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px var(--yellow-glow);
-        }
-
-        .btn-checkout {
-            background: #fff;
-            color: var(--error);
-            border: 2px solid #fca5a5;
-        }
-
-        .btn-checkout:hover:not(:disabled) {
-            background: #fff1f2;
-            border-color: var(--error);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.12);
-        }
-
-        .btn-checkout .btn-spinner {
-            border-color: rgba(239, 68, 68, 0.15);
-            border-top-color: var(--error);
-        }
-
-        /* History */
-        .history-section {
-            margin-top: 22px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
-        }
-
-        .history-heading {
-            font-size: 10.5px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--muted);
-            margin-bottom: 12px;
-        }
-
-        .history-scroll {
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-            max-height: 220px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-        }
-
-        .h-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 9px 13px;
-            background: var(--bg);
-            border-radius: 10px;
-            border: 1px solid var(--border);
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 30px;
             font-size: 13px;
+            font-weight: 600;
         }
 
-        .h-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .h-dot {
+        .status-badge.in { background: #dcfce7; color: #166534; }
+        .status-badge.out { background: #f3f4f6; color: #4b5563; }
+        
+        .status-badge .dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            flex-shrink: 0;
+        }
+        .status-badge.in .dot { background: #22c55e; animation: pulseDot 2s infinite; }
+        .status-badge.out .dot { background: #9ca3af; }
+
+        /* Actions Grid */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 30px;
         }
 
-        .h-dot.in {
-            background: var(--success);
+        @media (max-width: 480px) {
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .h-dot.out {
-            background: var(--error);
+        .action-card {
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            position: relative;
         }
 
-        .h-type {
-            font-weight: 600;
+        .action-card.primary {
+            border-color: var(--yellow);
+            background: #fffdf2;
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .action-card:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            filter: grayscale(1);
+        }
+
+        .action-card .icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        .action-card.primary .icon-box { background: var(--yellow); color: #000; }
+        .action-card.secondary .icon-box { background: #fee2e2; color: #ef4444; }
+
+        .action-card .lbl {
+            font-size: 16px;
+            font-weight: 700;
             color: var(--text);
         }
 
-        .h-time {
-            font-family: 'DM Mono', monospace;
+        .action-card .desc {
             font-size: 12px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .action-card.active-state {
+            border-color: var(--yellow);
+            box-shadow: 0 0 0 3px var(--yellow-glow);
+        }
+
+        /* Progress loader inside card */
+        .action-card.loading .icon-box,
+        .action-card.loading .lbl,
+        .action-card.loading .desc {
+            visibility: hidden;
+        }
+
+        .action-card .card-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+
+        .action-card.loading .card-spinner {
+            display: block;
+        }
+
+        /* History */
+        .history-container {
+            flex: 1;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .history-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
             color: var(--muted);
         }
 
-        .h-date {
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        /* Custom Scrollbar */
+        .history-list::-webkit-scrollbar { width: 5px; }
+        .history-list::-webkit-scrollbar-track { background: transparent; }
+        .history-list::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .history-item:hover { background: #f3f4f6; }
+
+        .hi-left { display: flex; align-items: center; gap: 12px; }
+        .hi-icon { width: 8px; height: 8px; border-radius: 50%; }
+        .hi-icon.in { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+        .hi-icon.out { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+
+        .hi-info { display: flex; flex-direction: column; }
+        .hi-type { font-size: 13px; font-weight: 700; color: var(--text); }
+        .hi-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+        
+        .hi-date {
             font-size: 11px;
-            color: var(--muted);
-            background: var(--surface);
-            padding: 2px 8px;
-            border-radius: 6px;
+            font-weight: 600;
+            color: #64748b;
+            background: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
             border: 1px solid var(--border);
         }
 
-        .h-empty {
-            text-align: center;
-            padding: 18px;
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        /* Signout */
-        .signout-row {
-            margin-top: 16px;
+        /* Signout footer */
+        .dash-footer {
+            margin-top: auto;
+            padding-top: 20px;
             display: flex;
             justify-content: center;
         }
 
-        .btn-signout {
+        .btn-logout {
             background: none;
             border: none;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
             color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 8px;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
             transition: all 0.2s;
         }
 
-        .btn-signout:hover {
-            color: var(--text);
-            background: var(--bg);
+        .btn-logout:hover {
+            color: var(--error);
+            background: #fff1f2;
         }
 
         /* ── TOAST ───────────────────────────────── */
@@ -763,71 +805,71 @@
         <!-- ═══════════════ DASHBOARD ═══════════════ -->
         <div id="dashboard-view" class="view">
             <div class="card">
-                <!-- Welcome strip -->
-                <div class="dash-welcome">
-                    <div class="emp-avatar" id="emp-avatar"></div>
-                    <div class="welcome-info">
-                        <div class="welcome-name" id="emp-nombre"></div>
-                        <div class="welcome-area" id="emp-area"></div>
-                    </div>
-                    <div id="status-pill" class="status-pill status-out">
-                        <span class="dot"></span>
-                        <span id="status-lbl">Fuera</span>
-                    </div>
-                </div>
+                <!-- Sidebar: Employee Info -->
+                <aside class="dash-sidebar">
+                    <div class="emp-avatar" id="emp-avatar">--</div>
+                    <div class="welcome-msg">¡Bienvenido!</div>
+                    <h2 class="welcome-name" id="emp-nombre">Empleado</h2>
+                    <div class="welcome-area" id="emp-area">Cargando...</div>
 
-                <div class="dash-body">
-                    <!-- Time -->
-                    <div class="time-display">
-                        <div class="time-label">Hora actual</div>
-                        <div class="big-time" id="dash-clock">--:--:--</div>
-                        <div class="big-date" id="dash-date"></div>
-                        <div id="work-duration" style="display: none; font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; color: #166534; margin-top: 8px; background: #dcfce7; padding: 4px 10px; border-radius: 6px; width: fit-content;"></div>
+                    <div class="schedule-box">
+                        <div class="sch-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Horario Registrado
+                        </div>
+                        <div class="sch-content" id="emp-horario">No asignado</div>
                     </div>
 
-                    <!-- Check-in button -->
-                    <button class="action-btn btn-checkin" id="btn-in" onclick="doCheckIn()">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                            <polyline points="10 17 15 12 10 7" />
-                            <line x1="15" y1="12" x2="3" y2="12" />
-                        </svg>
-                        <div class="btn-spinner"></div>
-                        <span class="btn-lbl">Registrar Entrada</span>
-                    </button>
+                    <div class="dash-footer">
+                        <button class="btn-logout" onclick="doSignOut()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                </aside>
 
-                    <!-- Check-out button -->
-                    <button class="action-btn btn-checkout" id="btn-out" onclick="doCheckOut()" style="display:none;">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" />
-                            <line x1="21" y1="12" x2="9" y2="12" />
-                        </svg>
-                        <div class="btn-spinner"></div>
-                        <span class="btn-lbl">Registrar Salida</span>
-                    </button>
-
-                    <!-- History -->
-                    <div class="history-section">
-                        <div class="history-heading">Registros recientes</div>
-                        <div id="history-scroll" class="history-scroll">
-                            <div class="h-empty">Cargando registros…</div>
+                <!-- Main: Actions & History -->
+                <div class="dash-main">
+                    <div class="main-time">
+                        <div class="time-group">
+                            <div class="big-time" id="dash-clock">--:--:--</div>
+                            <div class="big-date" id="dash-date">--------</div>
+                        </div>
+                        <div id="status-pill" class="status-badge out">
+                            <span class="dot"></span>
+                            <span id="status-lbl">Fuera de turno</span>
                         </div>
                     </div>
 
-                    <!-- Signout -->
-                    <div class="signout-row">
-                        <button class="btn-signout" onclick="doSignOut()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.2">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                                <polyline points="16 17 21 12 16 7" />
-                                <line x1="21" y1="12" x2="9" y2="12" />
-                            </svg>
-                            Cerrar sesión
+                    <div id="work-duration" style="display: none; font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: #166534; margin-bottom: 24px; background: #dcfce7; padding: 6px 14px; border-radius: 10px; width: fit-content; border: 1px solid #bbf7d0;"></div>
+
+                    <div class="actions-grid">
+                        <button class="action-card primary" id="btn-in" onclick="doCheckIn()">
+                            <div class="card-spinner"></div>
+                            <div class="icon-box">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                            </div>
+                            <span class="lbl">Registrar Entrada</span>
+                            <span class="desc">Comienza tu jornada laboral</span>
                         </button>
+
+                        <button class="action-card secondary" id="btn-out" onclick="doCheckOut()">
+                            <div class="card-spinner"></div>
+                            <div class="icon-box">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            </div>
+                            <span class="lbl">Registrar Salida</span>
+                            <span class="desc">Finaliza tu jornada laboral</span>
+                        </button>
+                    </div>
+
+                    <div class="history-container">
+                        <div class="history-header">
+                            <span class="history-title">Actividad Reciente</span>
+                        </div>
+                        <div id="history-scroll" class="history-list">
+                            <div class="h-empty">Cargando registros...</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -845,7 +887,7 @@
         // ──────────────────────────────────────────────
         // Después de desplegar el Apps Script (instrucciones al final),
         // pega la URL web aquí:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyiFOUgu3krUpnfZ-SzURGQhIrdZ-4khDo5kOQX4tPaEeJH3HfPTWnwbxHk3ssYgHRLYQ/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyos8A6cEvQWBqLDm2ryfv-ee1XEQGjqVHUZ56Gm6tQ-SJIOudBknIJ4kclK-_jGwllOQ/exec';
 
         // ──────────────────────────────────────────────
         // STATE
@@ -1013,6 +1055,7 @@
             av.style.color = p.fg;
             document.getElementById('emp-nombre').textContent = currentEmp.nombre;
             document.getElementById('emp-area').textContent = currentEmp.area;
+            document.getElementById('emp-horario').textContent = currentEmp.horario || "No asignado";
             loadRecords();
         }
 
@@ -1045,16 +1088,21 @@
             const lbl = document.getElementById('status-lbl');
             const btnI = document.getElementById('btn-in');
             const btnO = document.getElementById('btn-out');
+            
             if (isIn) {
-                pill.className = 'status-pill status-in';
+                pill.className = 'status-badge in';
                 lbl.textContent = 'En turno';
-                btnI.style.display = 'none';
-                btnO.style.display = 'flex';
+                btnI.classList.remove('active-state');
+                btnI.disabled = true;
+                btnO.classList.add('active-state');
+                btnO.disabled = false;
             } else {
-                pill.className = 'status-pill status-out';
-                lbl.textContent = 'Fuera';
-                btnI.style.display = 'flex';
-                btnO.style.display = 'none';
+                pill.className = 'status-badge out';
+                lbl.textContent = 'Fuera de turno';
+                btnI.classList.add('active-state');
+                btnI.disabled = false;
+                btnO.classList.remove('active-state');
+                btnO.disabled = true;
             }
         }
 
@@ -1063,17 +1111,19 @@
             if (!records.length) {
                 el.innerHTML = '<div class="h-empty">Sin registros aún.</div>'; return;
             }
-            const shown = [...records].reverse().slice(0, 15);
+            const shown = [...records].reverse().slice(0, 20);
             el.innerHTML = shown.map(r => `
-        <div class="h-item">
-            <div class="h-left">
-                <div class="h-dot ${r.tipo === 'ENTRADA' ? 'in' : 'out'}"></div>
-                <span class="h-type">${r.tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}</span>
-                <span class="h-time">${r.hora}</span>
-            </div>
-            <span class="h-date">${r.fecha}</span>
-        </div>
-    `).join('');
+                <div class="history-item">
+                    <div class="hi-left">
+                        <div class="hi-icon ${r.tipo === 'ENTRADA' ? 'in' : 'out'}"></div>
+                        <div class="hi-info">
+                            <span class="hi-type">${r.tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}</span>
+                            <span class="hi-time">${r.hora}</span>
+                        </div>
+                    </div>
+                    <span class="hi-date">${r.fecha}</span>
+                </div>
+            `).join('');
         }
 
         // ──────────────────────────────────────────────
@@ -1136,7 +1186,7 @@
         function doSignOut() {
             currentEmp = null; checkedIn = false; records = [];
             document.getElementById('f-correo').value = '';
-            document.getElementById('f-cedula').value = '';
+            document.getElementById('f-password').value = '';
             showView('login-view');
             toast('Sesión cerrada correctamente.');
         }
@@ -1179,7 +1229,8 @@
             if (action === 'login') {
                 const emp = DEMO_EMPS.find(e => e.correo.toLowerCase() === p.correo);
                 if (!emp) return { success: false, reason: 'correo' };
-                if (emp.cedula !== p.cedula) return { success: false, reason: 'cedula' };
+                if (emp.cedula !== p.password) return { success: false, reason: 'password' };
+                emp.horario = "Lunes (08:00 am) - (05:00 pm)\nMartes (08:00 am) - (05:00 pm)";
                 return { success: true, employee: emp };
             }
             if (action === 'getRecords') {
