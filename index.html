@@ -1158,6 +1158,38 @@
             transform: none;
             box-shadow: none;
         }
+        /* 2FA Verification */
+        .verify-inputs {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 32px 0;
+        }
+
+        .code-input {
+            width: 54px;
+            height: 68px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            background: #fafbfc;
+            color: var(--text);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+
+        .code-input:focus {
+            border-color: var(--yellow);
+            background: #fff;
+            box-shadow: 0 0 0 4px var(--yellow-glow);
+            transform: translateY(-4px);
+        }
+
+        #verify-view {
+            max-width: 440px;
+        }
     </style>
 </head>
 
@@ -1227,6 +1259,41 @@
                         <span class="btn-lbl">Ingresar al portal</span>
                     </button>
                     <p class="footer-hint">¿Problemas para ingresar? Contacta a tu supervisor.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════ VERIFICACIÓN 2FA ═══════════════ -->
+        <div id="verify-view" class="view">
+            <div class="card">
+                <div class="login-hero">
+                    <div class="bolt-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h1 class="login-title">Paso de seguridad</h1>
+                    <p class="login-sub">Verifica tu identidad ingresando el código temporal de 5 dígitos generado por el sistema.</p>
+                </div>
+                <div class="login-body">
+                    <div class="global-err" id="verify-err"></div>
+                    <div class="verify-inputs" id="code-inputs-container">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="0">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="1">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="2">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="3">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="4">
+                    </div>
+                    <button class="btn btn-primary" id="verify-btn" onclick="doVerifyCode()">
+                        <div class="btn-spinner"></div>
+                        <span class="btn-lbl">Verificar y continuar</span>
+                    </button>
+                    <button class="btn-logout" onclick="showView('login-view')" style="margin-top: 16px; width: 100%; justify-content: center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        Volver al inicio
+                    </button>
                 </div>
             </div>
         </div>
@@ -1620,8 +1687,8 @@
                 if (res.success) {
                     currentEmp = res.employee;
                     toleranceMins = currentEmp.tolerancia || 0;
-                    buildDashboard();
-                    showView('dashboard-view');
+                    // En lugar de ir directo al dash, vamos a la verificación 2FA
+                    openVerifyView();
                 } else if (res.reason === 'correo') {
                     document.getElementById('f-correo').classList.add('is-error');
                     const e = document.getElementById('err-correo');
@@ -1635,6 +1702,74 @@
                 }
             } catch (e) {
                 ge.textContent = 'Error de conexión. Verifica tu internet.'; ge.classList.add('show');
+            } finally {
+                btn.classList.remove('loading'); btn.disabled = false;
+            }
+        }
+
+        // ──────────────────────────────────────────────
+        // 2FA LOGIC
+        // ──────────────────────────────────────────────
+        function openVerifyView() {
+            showView('verify-view');
+            const inputs = document.querySelectorAll('.code-input');
+            inputs.forEach(i => i.value = '');
+            setTimeout(() => inputs[0].focus(), 500);
+            
+            // Eventos para los inputs
+            const container = document.getElementById('code-inputs-container');
+            if (!container.dataset.init) {
+                container.dataset.init = "true";
+                container.addEventListener('input', e => {
+                    const el = e.target;
+                    if (el.value.length === 1) {
+                        const next = el.nextElementSibling;
+                        if (next) next.focus();
+                        else checkCompleteCode();
+                    }
+                });
+                container.addEventListener('keydown', e => {
+                    if (e.key === 'Backspace' && !e.target.value) {
+                        const prev = e.target.previousElementSibling;
+                        if (prev) prev.focus();
+                    }
+                });
+            }
+        }
+
+        function checkCompleteCode() {
+            const code = Array.from(document.querySelectorAll('.code-input')).map(i => i.value).join('');
+            if (code.length === 5) doVerifyCode();
+        }
+
+        async function doVerifyCode() {
+            const inputs = document.querySelectorAll('.code-input');
+            const code = Array.from(inputs).map(i => i.value).join('');
+            const btn = document.getElementById('verify-btn');
+            const err = document.getElementById('verify-err');
+
+            if (code.length < 5) {
+                toast('Ingresa los 5 dígitos.', 'err');
+                return;
+            }
+
+            err.textContent = ''; err.classList.remove('show');
+            btn.classList.add('loading'); btn.disabled = true;
+
+            try {
+                const res = await api('verify2FA', { code });
+                if (res.success) {
+                    buildDashboard();
+                    showView('dashboard-view');
+                    toast('Acceso concedido.', 'ok');
+                } else {
+                    err.textContent = res.error || 'Código incorrecto.';
+                    err.classList.add('show');
+                    inputs.forEach(i => i.value = '');
+                    inputs[0].focus();
+                }
+            } catch (e) {
+                toast('Error de conexión.', 'err');
             } finally {
                 btn.classList.remove('loading'); btn.disabled = false;
             }
@@ -1731,6 +1866,41 @@
             if (isDone) {
                 if (dot) dot.className = 'status-dot';
                 if (lbl) lbl.textContent = 'Jornada completada';
+                
+                // Calcular duración total
+                const todayR = records.filter(r => {
+                    let rFecha = r.fecha;
+                    if (typeof rFecha === 'string' && rFecha.includes('T')) {
+                        const d = new Date(rFecha);
+                        rFecha = String(d.getDate()).padStart(2, '0') + "/" + String(d.getMonth()+1).padStart(2, '0') + "/" + d.getFullYear();
+                    }
+                    return rFecha === today;
+                });
+                
+                const entry = todayR.find(r => r.tipo === 'ENTRADA');
+                const exit = todayR.find(r => r.tipo === 'SALIDA');
+                
+                if (entry && exit) {
+                    const parseT = (t) => {
+                        const [h, m, s] = t.split(':').map(Number);
+                        const d = new Date(); d.setHours(h, m, s, 0);
+                        return d.getTime();
+                    };
+                    const diff = parseT(exit.hora) - parseT(entry.hora);
+                    if (diff > 0) {
+                        const hh = Math.floor(diff / 3600000);
+                        const mm = Math.floor((diff % 3600000) / 60000);
+                        const ss = Math.floor((diff % 60000) / 1000);
+                        const durEl = document.getElementById('work-duration-dash');
+                        if (durEl) {
+                            durEl.style.display = 'block';
+                            durEl.textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+                            durEl.style.color = 'var(--muted)';
+                            durEl.style.background = 'var(--surface-alt)';
+                        }
+                    }
+                }
+
                 btnI.disabled = true;
                 btnI.classList.remove('active-run');
                 btnO.disabled = true;
