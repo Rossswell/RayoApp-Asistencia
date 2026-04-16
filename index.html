@@ -1762,6 +1762,8 @@
             // Re-config action
             document.getElementById('btn-save-just').onclick = async () => {
                 const btnM = document.getElementById('btn-save-just');
+                if (isProcessing || btnM.disabled) return;
+                
                 const reason = document.getElementById('txt-just').value.trim();
                 if (!reason) {
                     toast('Por favor, escribe una justificación.', 'err');
@@ -1800,7 +1802,7 @@
         }
 
         async function processAction(tipo) {
-            if (!currentEmp) return;
+            if (!currentEmp || isProcessing) return;
             const btn = document.getElementById(tipo === 'ENTRADA' ? 'btn-in-dash' : 'btn-out-dash');
             
             const now = new Date();
