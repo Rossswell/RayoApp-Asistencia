@@ -1429,9 +1429,17 @@
             }
         }
         
+        function getTodayStr() {
+            const now = new Date();
+            const d = String(now.getDate()).padStart(2, '0');
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const y = now.getFullYear();
+            return `${d}/${m}/${y}`;
+        }
+
         // Después de desplegar el Apps Script (instrucciones al final),
         // pega la URL web aquí:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYvrLyowOXejKEOhamJzsHIafLXnYc8gZNTBhDB57ggyOgbri8rjGccoE0MXHfM05akQ/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyxynVsX7X_sB8IOl7Kj90r09H5HHhzPItHJRCXHY7xYamWIreKd00Rd3qgTRhLK5ib-g/exec';
 
         setInterval(updateClock, 1000);
 
@@ -1680,8 +1688,16 @@
             const entryMins = toMins(sch.current.in);
             const isTooEarly = nowMins < (entryMins - toleranceMins);
 
-            const today = new Date().toLocaleDateString('es-VE');
-            const todayR = records.filter(r => r.fecha === today);
+            const today = getTodayStr();
+            const todayR = records.filter(r => {
+                // Handle both normalized "DD/MM/YYYY" and ISO strings just in case
+                if (typeof r.fecha === 'string' && r.fecha.includes('T')) {
+                    const d = new Date(r.fecha);
+                    const ds = String(d.getDate()).padStart(2, '0') + "/" + String(d.getMonth()+1).padStart(2, '0') + "/" + d.getFullYear();
+                    return ds === today;
+                }
+                return r.fecha === today;
+            });
             const last = todayR[todayR.length - 1];
             const isIn = (last && last.tipo === 'ENTRADA');
             
@@ -1807,12 +1823,17 @@
                 nombre: currentEmp.nombre,
                 area: currentEmp.area,
                 tipo: tipo,
-                fecha: now.toLocaleDateString('es-VE'),
+                fecha: getTodayStr(),
                 hora: now.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
                 mensajeSistema: mensajeSistema,
                 minTarde: minTarde,
                 justificativo: ""
             };
+
+            // Disable immediately to prevent double submissions
+            btn.disabled = true;
+            btn.classList.add('loading');
+            btn.querySelector('.btn-card-desc').textContent = "Registrando...";
 
             if (needsJustification) {
                 openJustModal(data, mensajeSistema);
@@ -1831,15 +1852,18 @@
                 const res = await api('register', data);
                 if (res.success) {
                     toast(`${data.mensajeSistema} registrado con éxito.`, 'ok');
-                    loadRecords();
+                    await loadRecords(); // Wait for sync
                 } else {
                     toast(res.error || 'Error al registrar.', 'err');
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                    btn.querySelector('.btn-card-desc').textContent = tipo === 'ENTRADA' ? "Marca tu llegada" : "Marca tu partida";
                 }
             } catch (e) {
                 toast('Error de conexión.', 'err');
-            } finally {
                 btn.classList.remove('loading');
                 btn.disabled = false;
+                btn.querySelector('.btn-card-desc').textContent = tipo === 'ENTRADA' ? "Marca tu llegada" : "Marca tu partida";
             }
         }
 
@@ -1849,20 +1873,32 @@
             if (!records.length) {
                 el.innerHTML = '<div class="h-empty">Sin registros aún.</div>'; return;
             }
-            const shown = [...records].reverse().slice(0, 20);
-            el.innerHTML = shown.map(r => `
-                <div class="history-item-dark">
-                    <div class="hi-info">
-                        <span class="hi-time-dark">${r.hora}</span>
-                        <span class="hi-date-dark">${r.fecha}</span>
+            const shown = records.slice(0, 20);
+            el.innerHTML = shown.map(r => {
+                let displayTime = r.hora;
+                let displayDate = r.fecha;
+                
+                // If it looks like ISO string (from older bug), format it better
+                if (typeof displayDate === 'string' && displayDate.includes('T')) {
+                    const d = new Date(displayDate);
+                    displayDate = String(d.getDate()).padStart(2, '0') + "/" + String(d.getMonth()+1).padStart(2, '0') + "/" + d.getFullYear();
+                    displayTime = d.getUTCHours().toString().padStart(2, '0') + ":" + d.getUTCMinutes().toString().padStart(2, '0') + ":" + d.getUTCSeconds().toString().padStart(2, '0');
+                }
+
+                return `
+                    <div class="history-item-dark">
+                        <div class="hi-info">
+                            <span class="hi-time-dark">${displayTime}</span>
+                            <span class="hi-date-dark">${displayDate}</span>
+                        </div>
+                        <div class="hi-right">
+                            <span class="hi-type-badge ${r.tipo === 'ENTRADA' ? 'in' : 'out'}">
+                                ${r.tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}
+                            </span>
+                        </div>
                     </div>
-                    <div class="hi-right">
-                        <span class="hi-type-badge ${r.tipo === 'ENTRADA' ? 'in' : 'out'}">
-                            ${r.tipo === 'ENTRADA' ? 'Entrada' : 'Salida'}
-                        </span>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
 
@@ -1891,46 +1927,12 @@
         // API  (Apps Script backend o Demo mode)
         // ──────────────────────────────────────────────
         async function api(action, params = {}) {
-            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'TU_APPS_SCRIPT_URL_AQUI')
-                return demoApi(action, params);
-
             const qs = new URLSearchParams({ action, ...params }).toString();
             const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`, { redirect: 'follow' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             if (!data.success) console.error('Backend Error:', data);
             return data;
-        }
-
-        // ──────────────────────────────────────────────
-        // DEMO MODE  (funciona sin backend)
-        // ──────────────────────────────────────────────
-        const DEMO_EMPS = [
-            { nombre: 'Elias Miguel Montilla Goodridge', cedula: '16902682', correo: 'eliasmontillaflash@gmail.com', area: 'Operador', fecha_inicio: '25/9/2025', fecha_cumple: '25/2/1986' },
-            { nombre: 'Felix Enrique Perez Estrada', cedula: '30431036', correo: 'felixperezflash@gmail.com', area: 'Enrutador', fecha_inicio: '01/15/2026', fecha_cumple: '10/7/2003' },
-            { nombre: 'Yelitza Susana Marrufo Escalona', cedula: '15699181', correo: 'susanamarrufoflash@gmail.com', area: 'Operador', fecha_inicio: '17/10/2025', fecha_cumple: '19/10/1980' },
-            { nombre: 'Santiago Johan Aragon Sanchez', cedula: '31828558', correo: 'santi200679@gmail.com', area: 'Sistemas y Mejoras', fecha_inicio: '24/3/2026', fecha_cumple: '24/3/2026' },
-        ];
-
-        let _demoRecs = [];
-
-        async function demoApi(action, p) {
-            await new Promise(r => setTimeout(r, 600));
-            if (action === 'login') {
-                const emp = DEMO_EMPS.find(e => e.correo.toLowerCase() === p.correo);
-                if (!emp) return { success: false, reason: 'correo' };
-                if (emp.cedula !== p.password) return { success: false, reason: 'password' };
-                emp.horario = "Lunes (08:00 am) - (05:00 pm)\nMartes (08:00 am) - (05:00 pm)";
-                return { success: true, employee: emp };
-            }
-            if (action === 'getRecords') {
-                return { success: true, records: _demoRecs.filter(r => r.cedula === p.cedula) };
-            }
-            if (action === 'register') {
-                _demoRecs.push({ ...p });
-                return { success: true };
-            }
-            return { success: false, error: 'Acción desconocida.' };
         }
     </script>
 </body>
