@@ -1404,12 +1404,10 @@
             const now = new Date();
             const nowMins = now.getHours() * 60 + now.getMinutes();
             const entryMins = toMins(sch.current.in);
-            const exitMins = toMins(sch.current.out);
 
             const btnIn = document.getElementById('btn-in-dash');
             const btnOut = document.getElementById('btn-out-dash');
 
-            // Si no ha comenzado el horario - tolerancia, bloquear ambos
             const canStartAt = entryMins - toleranceMins;
             const isTooEarly = nowMins < canStartAt;
 
@@ -1419,16 +1417,21 @@
                 btnIn.querySelector('.btn-card-desc').textContent = "Fuera de horario";
                 btnOut.querySelector('.btn-card-desc').textContent = "Fuera de horario";
             } else {
-                btnIn.disabled = false;
-                btnOut.disabled = false;
-                btnIn.querySelector('.btn-card-desc').textContent = "Marca tu llegada";
-                btnOut.querySelector('.btn-card-desc').textContent = "Marca tu partida";
+                // Restaurar textos si estaban bloqueados
+                if (btnIn.querySelector('.btn-card-desc').textContent === "Fuera de horario") {
+                    btnIn.querySelector('.btn-card-desc').textContent = "Marca tu llegada";
+                }
+                if (btnOut.querySelector('.btn-card-desc').textContent === "Fuera de horario") {
+                    btnOut.querySelector('.btn-card-desc').textContent = "Marca tu partida";
+                }
+                // El estado disabled lo maneja setStatus via syncStatus
+                syncStatus(); 
             }
         }
         
         // Después de desplegar el Apps Script (instrucciones al final),
         // pega la URL web aquí:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdn57lZI2ynDPPx76QCCIpwr_lHRuC9xV9clKqncFMJi12Ncn8oEm86-KrfTA7GwCwxQ/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYvrLyowOXejKEOhamJzsHIafLXnYc8gZNTBhDB57ggyOgbri8rjGccoE0MXHfM05akQ/exec';
 
         setInterval(updateClock, 1000);
 
@@ -1670,19 +1673,35 @@
         }
 
         function syncStatus() {
-            // Look at the last record for today
+            if (!currentEmp) return;
+            const sch = parseSchedule(currentEmp.horario);
+            const now = new Date();
+            const nowMins = now.getHours() * 60 + now.getMinutes();
+            const entryMins = toMins(sch.current.in);
+            const isTooEarly = nowMins < (entryMins - toleranceMins);
+
             const today = new Date().toLocaleDateString('es-VE');
             const todayR = records.filter(r => r.fecha === today);
             const last = todayR[todayR.length - 1];
-            setStatus(last && last.tipo === 'ENTRADA');
+            const isIn = (last && last.tipo === 'ENTRADA');
+            
+            setStatus(isIn, isTooEarly);
         }
 
-        function setStatus(isIn) {
+        function setStatus(isIn, isTooEarly = false) {
             checkedIn = isIn;
             const dot = document.getElementById('status-dot-dash');
             const lbl = document.getElementById('status-lbl-dash');
             const btnI = document.getElementById('btn-in-dash');
             const btnO = document.getElementById('btn-out-dash');
+
+            if (isTooEarly) {
+                if (dot) dot.className = 'status-dot';
+                if (lbl) lbl.textContent = 'Fuera de horario';
+                btnI.disabled = true;
+                btnO.disabled = true;
+                return;
+            }
 
             if (isIn) {
                 if (dot) dot.className = 'status-dot active';
@@ -1752,7 +1771,7 @@
             const exitMins = toMins(sch.current.out);
 
             let mensajeSistema = "";
-            let minTarde = 0;
+            let minTarde = "";
             let needsJustification = false;
 
             if (tipo === 'ENTRADA') {
@@ -1765,14 +1784,17 @@
                     minTarde = nowMins - entryMins;
                     needsJustification = true;
                 } else {
-                    // Si permitimos entrada antes de la hora pero después de la tolerancia negativa
+                    // Si permitimos entrada antes de la hora pero después de la tolerancia negativa (manejado por visibilidad)
                     mensajeSistema = "✅Entrada puntual"; 
                 }
             } else {
                 if (nowMins === exitMins) {
                     mensajeSistema = "🛑Salida puntual";
-                } else if (nowMins < exitMins && nowMins >= exitMins - toleranceMins) {
+                } else if (nowMins >= exitMins - toleranceMins && nowMins < exitMins) {
                     mensajeSistema = "🔴Salida tolerada";
+                    needsJustification = true;
+                } else if (nowMins < exitMins - toleranceMins) {
+                    mensajeSistema = "➡️Salida anticipada";
                     needsJustification = true;
                 } else {
                     mensajeSistema = "❌Salida fuera de horario";
@@ -1786,7 +1808,7 @@
                 area: currentEmp.area,
                 tipo: tipo,
                 fecha: now.toLocaleDateString('es-VE'),
-                hora: now.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                hora: now.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
                 mensajeSistema: mensajeSistema,
                 minTarde: minTarde,
                 justificativo: ""
@@ -1843,59 +1865,6 @@
             `).join('');
         }
 
-        // ──────────────────────────────────────────────
-        // CHECK IN
-        // ──────────────────────────────────────────────
-        async function doCheckIn() {
-            const btn = document.getElementById('btn-in-dash');
-            btn.disabled = true; btn.classList.add('loading');
-            const now = new Date();
-            const fecha = now.toLocaleDateString('es-VE');
-            const hora = now.toLocaleTimeString('es-VE', { hour12: false });
-            try {
-                const res = await api('register', {
-                    nombre: currentEmp.nombre,
-                    cedula: currentEmp.cedula,
-                    area: currentEmp.area,
-                    tipo: 'ENTRADA', fecha, hora
-                });
-                if (res.success) {
-                    records.push({ tipo: 'ENTRADA', fecha, hora });
-                    setStatus(true); renderRecords();
-                    toast('✅ Entrada registrada a las ' + hora, 'ok');
-                } else {
-                    toast('❌ ' + (res.error || 'Error al registrar'), 'err');
-                }
-            } catch (e) { toast('❌ Error de conexión al registrar entrada.', 'err'); }
-            finally { btn.disabled = false; btn.classList.remove('loading'); }
-        }
-
-        // ──────────────────────────────────────────────
-        // CHECK OUT
-        // ──────────────────────────────────────────────
-        async function doCheckOut() {
-            const btn = document.getElementById('btn-out-dash');
-            btn.disabled = true; btn.classList.add('loading');
-            const now = new Date();
-            const fecha = now.toLocaleDateString('es-VE');
-            const hora = now.toLocaleTimeString('es-VE', { hour12: false });
-            try {
-                const res = await api('register', {
-                    nombre: currentEmp.nombre,
-                    cedula: currentEmp.cedula,
-                    area: currentEmp.area,
-                    tipo: 'SALIDA', fecha, hora
-                });
-                if (res.success) {
-                    records.push({ tipo: 'SALIDA', fecha, hora });
-                    setStatus(false); renderRecords();
-                    toast('👋 Salida registrada a las ' + hora, 'ok');
-                } else {
-                    toast('❌ ' + (res.error || 'Error al registrar'), 'err');
-                }
-            } catch (e) { toast('❌ Error de conexión al registrar salida.', 'err'); }
-            finally { btn.disabled = false; btn.classList.remove('loading'); }
-        }
 
         // ──────────────────────────────────────────────
         // SIGN OUT
