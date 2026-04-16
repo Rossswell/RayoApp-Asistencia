@@ -867,6 +867,8 @@
             width: 22px;
             height: 22px;
             margin: 0;
+            border-color: rgba(0,0,0,0.15);
+            border-top-color: #000;
         }
 
         .btn-modal-save.loading .btn-lbl {
@@ -1116,7 +1118,7 @@
             border: none;
             padding: 14px;
             border-radius: 14px;
-            font-weight: 800;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
@@ -1704,8 +1706,7 @@
             const entryMins = toMins(sch.current.in);
             const isTooEarly = nowMins < (entryMins - toleranceMins);
 
-            const today = getTodayStr();
-             const todayR = records.filter(r => {
+            const todayR = records.filter(r => {
                 // El servidor devuelve [NUEVO, ..., VIEJO]
                 if (typeof r.fecha === 'string' && r.fecha.includes('T')) {
                     const d = new Date(r.fecha);
@@ -1714,19 +1715,37 @@
                 }
                 return r.fecha === today;
             });
-            // Al estar ordenado descendente, el más reciente es el index 0
-            const last = todayR[0];
-            const isIn = (last && last.tipo === 'ENTRADA');
+
+            // Lógica estricta: si ya hay una SALIDA hoy, ya terminó
+            const hasOut = todayR.some(r => r.tipo === 'SALIDA');
+            const hasIn = todayR.some(r => r.tipo === 'ENTRADA');
             
-            setStatus(isIn, isTooEarly);
+            // Si tiene entrada pero no salida -> está en turno
+            const isIn = hasIn && !hasOut;
+            const isDone = hasOut;
+            
+            setStatus(isIn, isTooEarly, isDone);
         }
 
-        function setStatus(isIn, isTooEarly = false) {
+        function setStatus(isIn, isTooEarly = false, isDone = false) {
             checkedIn = isIn;
             const dot = document.getElementById('status-dot-dash');
             const lbl = document.getElementById('status-lbl-dash');
             const btnI = document.getElementById('btn-in-dash');
             const btnO = document.getElementById('btn-out-dash');
+
+            if (isDone) {
+                if (dot) dot.className = 'status-dot';
+                if (lbl) lbl.textContent = 'Jornada completada';
+                btnI.disabled = true;
+                btnI.classList.remove('active-run');
+                btnO.disabled = true;
+                btnO.classList.remove('active-run');
+                btnI.querySelector('.btn-card-desc').textContent = "Marca tu llegada";
+                btnO.querySelector('.btn-card-desc').textContent = "Marca tu partida";
+                renderRecords();
+                return;
+            }
 
             if (isTooEarly) {
                 if (dot) dot.className = 'status-dot';
@@ -1975,4 +1994,4 @@
     </script>
 </body>
 
-</html>
+</html>F
