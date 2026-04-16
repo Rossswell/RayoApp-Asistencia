@@ -1515,7 +1515,7 @@
 
         // Después de desplegar el Apps Script (instrucciones al final),
         // pega la URL web aquí:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNmvvq6yfW-hSFjvD_DYdW_9WmdUzzt13myLlluFAvTVSkicRcCHzcOLjtoYRy6d1lug/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwmswfu4Uv0J6v4RMP0W4b5aSeKOZJgWJdZWzqsaneiOz_xf73rjq3fwgh5TjWKpLy03w/exec';
 
         setInterval(updateClock, 1000);
 
@@ -1732,6 +1732,14 @@
                     if (e.key === 'Backspace' && !e.target.value) {
                         const prev = e.target.previousElementSibling;
                         if (prev) prev.focus();
+                    }
+                });
+                container.addEventListener('paste', e => {
+                    const data = e.clipboardData.getData('text');
+                    const clean = data.trim().replace(/\D/g, '').slice(0, 5);
+                    if (clean.length === 5) {
+                        inputs.forEach((input, i) => input.value = clean[i]);
+                        checkCompleteCode();
                     }
                 });
             }
@@ -2148,7 +2156,7 @@
         // API  (Apps Script backend o Demo mode)
         // ──────────────────────────────────────────────
         async function api(action, params = {}) {
-            const isWrite = (action === 'register' || action === 'login');
+            const isWrite = (action === 'register' || action === 'login' || action === 'verify2FA');
             const url = isWrite ? APPS_SCRIPT_URL : `${APPS_SCRIPT_URL}?${new URLSearchParams({ action, ...params }).toString()}`;
             
             const opts = { 
