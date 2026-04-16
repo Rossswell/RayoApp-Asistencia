@@ -143,7 +143,7 @@
         .user-name {
             font-size: 13px;
             font-weight: 700;
-            color: var(--text);
+            color: #fff;
         }
 
         .btn-logout-small {
@@ -188,7 +188,6 @@
         }
 
         .live-clock {
-            font-family: 'DM Mono', monospace;
             font-size: 13px;
             color: var(--muted);
             letter-spacing: 0.03em;
@@ -517,7 +516,6 @@
         }
 
         .dash-clock {
-            font-family: 'DM Mono', monospace;
             font-size: 38px;
             font-weight: 700;
             color: var(--text);
@@ -858,9 +856,17 @@
             display: none;
         }
 
-        .action-btn-card.loading .btn-card-spinner,
+        .action-btn-card.loading .btn-card-spinner {
+            display: block;
+        }
+
         .btn-modal-save.loading .btn-card-spinner {
             display: block;
+            position: static;
+            border-width: 3px;
+            width: 22px;
+            height: 22px;
+            margin: 0;
         }
 
         .btn-modal-save.loading .btn-lbl {
