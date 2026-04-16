@@ -1348,7 +1348,8 @@
             <div class="modal-actions">
                 <button class="btn-modal-cancel" onclick="closeJustModal()">Cancelar</button>
                 <button class="btn-modal-save" id="btn-save-just">
-                    <span>Guardar Registro</span>
+                    <div class="btn-card-spinner"></div>
+                    <span class="btn-lbl">Guardar Registro</span>
                 </button>
             </div>
         </div>
@@ -1362,7 +1363,8 @@
         let currentEmp = null;
         let checkedIn = false;
         let records = [];
-        let toleranceMins = 0; // Se obtiene de la base de datos
+        let toleranceMins = 0; 
+        let isProcessing = false;
 
         function updateClock() {
             const now = new Date();
@@ -1674,10 +1676,13 @@
                 const res = await api('getRecords', { cedula: currentEmp.cedula });
                 if (res.success) {
                     records = res.records || [];
-                    renderRecords();
-                    syncStatus();
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                console.error(e); 
+                toast('Error al cargar historial.', 'err');
+            } finally {
+                syncStatus();
+            }
         }
 
         function syncStatus() {
@@ -1722,18 +1727,25 @@
             if (isIn) {
                 if (dot) dot.className = 'status-dot active';
                 if (lbl) lbl.textContent = 'En turno';
-                btnI.classList.remove('active-run');
+                btnI.classList.remove('active-run', 'loading');
                 btnI.disabled = true;
+                btnI.querySelector('.btn-card-desc').textContent = "Marca tu llegada";
                 btnO.classList.add('active-run');
-                btnO.disabled = false;
+                btnO.classList.remove('loading');
+                btnO.disabled = isProcessing || false;
+                btnO.querySelector('.btn-card-desc').textContent = "Marca tu partida";
             } else {
                 if (dot) dot.className = 'status-dot';
                 if (lbl) lbl.textContent = 'Fuera de turno';
                 btnI.classList.add('active-run');
-                btnI.disabled = false;
-                btnO.classList.remove('active-run');
+                btnI.classList.remove('loading');
+                btnI.disabled = isProcessing || false;
+                btnI.querySelector('.btn-card-desc').textContent = "Marca tu llegada";
+                btnO.classList.remove('active-run', 'loading');
                 btnO.disabled = true;
+                btnO.querySelector('.btn-card-desc').textContent = "Marca tu partida";
             }
+            renderRecords();
         }
 
         // ──────────────────────────────────────────────
@@ -1749,20 +1761,31 @@
             
             // Re-config action
             document.getElementById('btn-save-just').onclick = async () => {
+                const btnM = document.getElementById('btn-save-just');
                 const reason = document.getElementById('txt-just').value.trim();
                 if (!reason) {
                     toast('Por favor, escribe una justificación.', 'err');
                     return;
                 }
+                
+                btnM.classList.add('loading');
+                btnM.disabled = true;
+                
                 pendingRegistration.justificativo = reason;
-                await commitRegistration(pendingRegistration);
-                closeJustModal();
+                const ok = await commitRegistration(pendingRegistration);
+                
+                btnM.classList.remove('loading');
+                btnM.disabled = false;
+                
+                if (ok) closeJustModal();
             };
         }
 
         function closeJustModal() {
             document.getElementById('modal-just').classList.remove('active');
             pendingRegistration = null;
+            // Reset background buttons text if they was changed
+            syncStatus();
         }
 
         // ──────────────────────────────────────────────
@@ -1830,19 +1853,20 @@
                 justificativo: ""
             };
 
-            // Disable immediately to prevent double submissions
-            btn.disabled = true;
-            btn.classList.add('loading');
-            btn.querySelector('.btn-card-desc').textContent = "Registrando...";
-
             if (needsJustification) {
                 openJustModal(data, mensajeSistema);
             } else {
+                btn.disabled = true;
+                btn.classList.add('loading');
+                btn.querySelector('.btn-card-desc').textContent = "Registrando...";
                 await commitRegistration(data);
             }
         }
 
         async function commitRegistration(data) {
+            if (isProcessing) return false;
+            isProcessing = true;
+            
             const tipo = data.tipo;
             const btn = document.getElementById(tipo === 'ENTRADA' ? 'btn-in-dash' : 'btn-out-dash');
             btn.classList.add('loading');
@@ -1852,18 +1876,18 @@
                 const res = await api('register', data);
                 if (res.success) {
                     toast(`${data.mensajeSistema} registrado con éxito.`, 'ok');
-                    await loadRecords(); // Wait for sync
+                    await loadRecords(); 
+                    return true;
                 } else {
                     toast(res.error || 'Error al registrar.', 'err');
-                    btn.classList.remove('loading');
-                    btn.disabled = false;
-                    btn.querySelector('.btn-card-desc').textContent = tipo === 'ENTRADA' ? "Marca tu llegada" : "Marca tu partida";
+                    return false;
                 }
             } catch (e) {
                 toast('Error de conexión.', 'err');
-                btn.classList.remove('loading');
-                btn.disabled = false;
-                btn.querySelector('.btn-card-desc').textContent = tipo === 'ENTRADA' ? "Marca tu llegada" : "Marca tu partida";
+                return false;
+            } finally {
+                isProcessing = false;
+                syncStatus();
             }
         }
 
