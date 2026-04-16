@@ -1444,9 +1444,11 @@
             return `${d}/${m}/${y}`;
         }
 
+        const today = getTodayStr(); // Definición global para uso en toda la app
+
         // Después de desplegar el Apps Script (instrucciones al final),
         // pega la URL web aquí:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzJ2t7_oyIYn3h6-p7DQadgFZ4ulsz8rmul5rEA5WEfIPzus_1JwmeR8ZBctQcxJs-Hg/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwNmvvq6yfW-hSFjvD_DYdW_9WmdUzzt13myLlluFAvTVSkicRcCHzcOLjtoYRy6d1lug/exec';
 
         setInterval(updateClock, 1000);
 
@@ -1700,12 +1702,12 @@
 
             const todayR = records.filter(r => {
                 // El servidor devuelve [NUEVO, ..., VIEJO]
-                if (typeof r.fecha === 'string' && r.fecha.includes('T')) {
-                    const d = new Date(r.fecha);
-                    const ds = String(d.getDate()).padStart(2, '0') + "/" + String(d.getMonth()+1).padStart(2, '0') + "/" + d.getFullYear();
-                    return ds === today;
+                let rFecha = r.fecha;
+                if (typeof rFecha === 'string' && rFecha.includes('T')) {
+                    const d = new Date(rFecha);
+                    rFecha = String(d.getDate()).padStart(2, '0') + "/" + String(d.getMonth()+1).padStart(2, '0') + "/" + d.getFullYear();
                 }
-                return r.fecha === today;
+                return rFecha === today;
             });
 
             // Lógica estricta: si ya hay una SALIDA hoy, ya terminó
@@ -1976,8 +1978,20 @@
         // API  (Apps Script backend o Demo mode)
         // ──────────────────────────────────────────────
         async function api(action, params = {}) {
-            const qs = new URLSearchParams({ action, ...params }).toString();
-            const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`, { redirect: 'follow' });
+            const isWrite = (action === 'register' || action === 'login');
+            const url = isWrite ? APPS_SCRIPT_URL : `${APPS_SCRIPT_URL}?${new URLSearchParams({ action, ...params }).toString()}`;
+            
+            const opts = { 
+                method: isWrite ? 'POST' : 'GET',
+                redirect: 'follow'
+            };
+
+            if (isWrite) {
+                // Usamos text/plain para evitar el Preflight OPTIONS que GAS no soporta bien
+                opts.body = JSON.stringify({ action, ...params });
+            }
+
+            const res = await fetch(url, opts);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             if (!data.success) console.error('Backend Error:', data);
