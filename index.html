@@ -858,8 +858,13 @@
             display: none;
         }
 
-        .action-btn-card.loading .btn-card-spinner {
+        .action-btn-card.loading .btn-card-spinner,
+        .btn-modal-save.loading .btn-card-spinner {
             display: block;
+        }
+
+        .btn-modal-save.loading .btn-lbl {
+            display: none;
         }
 
         .recent-history {
@@ -1694,8 +1699,8 @@
             const isTooEarly = nowMins < (entryMins - toleranceMins);
 
             const today = getTodayStr();
-            const todayR = records.filter(r => {
-                // Handle both normalized "DD/MM/YYYY" and ISO strings just in case
+             const todayR = records.filter(r => {
+                // El servidor devuelve [NUEVO, ..., VIEJO]
                 if (typeof r.fecha === 'string' && r.fecha.includes('T')) {
                     const d = new Date(r.fecha);
                     const ds = String(d.getDate()).padStart(2, '0') + "/" + String(d.getMonth()+1).padStart(2, '0') + "/" + d.getFullYear();
@@ -1703,7 +1708,8 @@
                 }
                 return r.fecha === today;
             });
-            const last = todayR[todayR.length - 1];
+            // Al estar ordenado descendente, el más reciente es el index 0
+            const last = todayR[0];
             const isIn = (last && last.tipo === 'ENTRADA');
             
             setStatus(isIn, isTooEarly);
