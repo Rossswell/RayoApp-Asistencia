@@ -389,13 +389,13 @@
         }
 
         /* Spinner inside button */
-        .btn-spinner {
-            width: 19px;
-            height: 19px;
-            border: 2.5px solid rgba(0, 0, 0, 0.12);
-            border-top-color: #000;
+        .btn-spinner, .btn-card-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid rgba(0, 0, 0, 0.1);
+            border-top-color: rgba(0, 0, 0, 0.8);
             border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+            animation: spin 0.8s linear infinite;
             display: none;
         }
 
@@ -847,13 +847,7 @@
             position: absolute;
             top: 24px;
             right: 24px;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: none;
+            /* Estilo heredado de .btn-card-spinner arriba */
         }
 
         .action-btn-card.loading .btn-card-spinner {
@@ -863,12 +857,10 @@
         .btn-modal-save.loading .btn-card-spinner {
             display: block;
             position: static;
-            border-width: 3px;
+            margin: 0;
             width: 22px;
             height: 22px;
-            margin: 0;
-            border-color: rgba(0,0,0,0.15);
-            border-top-color: #000;
+            border-width: 3px;
         }
 
         .btn-modal-save.loading .btn-lbl {
@@ -1454,7 +1446,7 @@
 
         // Después de desplegar el Apps Script (instrucciones al final),
         // pega la URL web aquí:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwc1jK7IOY_c-cdqXF9WPhBa8Fv84Mux2Fz1meLrx8yMUsIr_ilHmP71hAGrA0Dto1c3A/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzJ2t7_oyIYn3h6-p7DQadgFZ4ulsz8rmul5rEA5WEfIPzus_1JwmeR8ZBctQcxJs-Hg/exec';
 
         setInterval(updateClock, 1000);
 
