@@ -566,11 +566,10 @@
         }
 
         .sch-val {
-            font-family: 'DM Mono', monospace;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 700;
             color: var(--text);
-            letter-spacing: -0.01em;
+            letter-spacing: -0.02em;
         }
 
         .sch-arrow {
@@ -736,13 +735,63 @@
 
         .work-duration {
             margin-left: auto;
-            font-family: 'DM Mono', monospace;
-            font-size: 13px;
-            color: var(--success);
-            background: var(--success-glow);
-            padding: 4px 12px;
-            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        .work-duration-label {
+            font-size: 10px;
             font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .work-duration-time {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--success);
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+        .late-counter {
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        .late-counter-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .late-counter-time {
+            font-size: 26px;
+            font-weight: 700;
+            color: #eab308;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+        .hi-mensaje {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+        .hi-justif {
+            font-size: 11px;
+            font-style: italic;
+            color: var(--muted);
+            margin-top: 2px;
+            opacity: 0.8;
+        }
+        .hi-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
 
@@ -1411,7 +1460,14 @@
                         <div class="summary-box">
                             <div class="status-dot" id="status-dot-dash"></div>
                             <span id="status-lbl-dash">Sin registros hoy</span>
-                            <div id="work-duration-dash" class="work-duration" style="display:none"></div>
+                            <div id="work-duration-dash" class="work-duration" style="display:none">
+                                <span class="work-duration-label">Tiempo trabajado</span>
+                                <span class="work-duration-time" id="work-duration-val">00:00:00</span>
+                            </div>
+                            <div id="late-counter-dash" class="late-counter" style="display:none">
+                                <span class="late-counter-label">Min. de retraso</span>
+                                <span class="late-counter-time" id="late-counter-val">00:00</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1567,36 +1623,60 @@
 
         // Después de desplegar el Apps Script (instrucciones al final),
         // pega la URL web aquí:
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzgCWmbJ0MUiqgQlSgNHRDrap3EEiJOGL_k2SxnWZeTao3w1-yo1z1eZqfms1CF9sUVQ/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOEPbnVh3abIVeahfsERhy-QuTqcCYt_W-Lc2mT6zMUFGzeZHKvAbMWCG4xv2ZUAkowQ/exec';
 
         setInterval(updateClock, 1000);
 
         function updateDuration() {
-            if (!checkedIn || !records.length) {
-                const durEl = document.getElementById('work-duration-dash');
-                if (durEl) durEl.style.display = 'none';
+            const durEl    = document.getElementById('work-duration-dash');
+            const durVal   = document.getElementById('work-duration-val');
+            const lateEl   = document.getElementById('late-counter-dash');
+            const lateVal  = document.getElementById('late-counter-val');
+
+            const todayStr = getTodayStr();
+            const now      = new Date();
+            const nowMins  = now.getHours() * 60 + now.getMinutes();
+
+            // --- Cronómetro de tiempo trabajado ---
+            if (checkedIn && records.length) {
+                const todayFormatted = now.toLocaleDateString('es-VE');
+                const entry = records.findLast(r => r.fecha === todayStr && r.tipo === 'ENTRADA');
+                if (entry) {
+                    const [h, m, s] = entry.hora.split(':').map(Number);
+                    const entryTime = new Date();
+                    entryTime.setHours(h, m, s, 0);
+                    const diff = now - entryTime;
+                    if (diff >= 0) {
+                        const hh = Math.floor(diff / 3600000);
+                        const mm = Math.floor((diff % 3600000) / 60000);
+                        const ss = Math.floor((diff % 60000) / 1000);
+                        if (durEl) durEl.style.display = 'flex';
+                        if (durVal) durVal.textContent = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+                    }
+                }
+                if (lateEl) lateEl.style.display = 'none';
                 return;
             }
-            const today = new Date().toLocaleDateString('es-VE');
-            const entry = records.findLast(r => r.fecha === today && r.tipo === 'ENTRADA');
-            if (!entry) return;
 
-            const [h, m, s] = entry.hora.split(':').map(Number);
-            const entryTime = new Date();
-            entryTime.setHours(h, m, s, 0);
+            // --- Contador de minutos tarde (cuando aún no ha marcado entrada) ---
+            if (durEl) durEl.style.display = 'none';
+            if (!currentEmp) { if (lateEl) lateEl.style.display = 'none'; return; }
 
-            const now = new Date();
-            const diff = now - entryTime;
-            if (diff < 0) return;
+            const sch = parseSchedule(currentEmp.horario);
+            if (!sch.current || sch.current.in === '--:--') { if (lateEl) lateEl.style.display = 'none'; return; }
 
-            const hh = Math.floor(diff / 3600000);
-            const mm = Math.floor((diff % 3600000) / 60000);
-            const ss = Math.floor((diff % 60000) / 1000);
+            const entryMins = toMins(sch.current.in);
+            const lateMinutes = nowMins - entryMins;
 
-            const durEl = document.getElementById('work-duration-dash');
-            if (durEl) {
-                durEl.style.display = 'block';
-                durEl.textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+            if (lateMinutes > 0) {
+                const lh = Math.floor(lateMinutes / 60);
+                const lm = lateMinutes % 60;
+                if (lateEl) lateEl.style.display = 'flex';
+                if (lateVal) lateVal.textContent = lh > 0
+                    ? `${String(lh).padStart(2,'0')}:${String(lm).padStart(2,'0')}`
+                    : `${String(lm).padStart(2,'0')} min`;
+            } else {
+                if (lateEl) lateEl.style.display = 'none';
             }
         }
         setInterval(updateDuration, 1000);
@@ -2090,11 +2170,12 @@
                     mensajeSistema = "✅Entrada puntual";
                 }
             } else {
+                const exitToleranceMins = 60;
                 if (nowMins === exitMins) {
                     mensajeSistema = "🛑Salida puntual";
-                } else if (nowMins >= exitMins - toleranceMins && nowMins < exitMins) {
+                } else if (nowMins > exitMins && nowMins <= exitMins + exitToleranceMins) {
                     mensajeSistema = "🔴Salida tolerada";
-                } else if (nowMins < exitMins - toleranceMins) {
+                } else if (nowMins < exitMins) {
                     mensajeSistema = "➡️Salida anticipada";
                     needsJustification = true;
                 } else {
@@ -2164,18 +2245,22 @@
                 let displayTime = r.hora;
                 let displayDate = r.fecha;
 
-                // If it looks like ISO string (from older bug), format it better
                 if (typeof displayDate === 'string' && displayDate.includes('T')) {
                     const d = new Date(displayDate);
                     displayDate = String(d.getDate()).padStart(2, '0') + "/" + String(d.getMonth() + 1).padStart(2, '0') + "/" + d.getFullYear();
                     displayTime = d.getUTCHours().toString().padStart(2, '0') + ":" + d.getUTCMinutes().toString().padStart(2, '0') + ":" + d.getUTCSeconds().toString().padStart(2, '0');
                 }
 
+                const mensaje = r.mensajeSistema || '';
+                const justif = r.justifEntrada || r.justifSalidaAnticipada || r.justifSalidaTardia || '';
+
                 return `
                     <div class="history-item-dark">
                         <div class="hi-info">
                             <span class="hi-time-dark">${displayTime}</span>
                             <span class="hi-date-dark">${displayDate}</span>
+                            ${mensaje ? `<span class="hi-mensaje">${mensaje}</span>` : ''}
+                            ${justif  ? `<span class="hi-justif">"${justif}"</span>` : ''}
                         </div>
                         <div class="hi-right">
                             <span class="hi-type-badge ${r.tipo === 'ENTRADA' ? 'in' : 'out'}">
