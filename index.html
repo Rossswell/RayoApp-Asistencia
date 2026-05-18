@@ -220,17 +220,10 @@
                     </svg>
                 </div>
                 <h1 class="login-title">Paso de seguridad</h1>
-                <p class="login-sub">Ingresa el código de 5 dígitos que te proporcionará tu supervisor.</p>
+                <p class="login-sub">Ingresa el código de 5 dígitos que puedes ver en la aplicación de tu supervisor.</p>
             </div>
             <div class="login-body">
                 <div class="global-err" id="verify-err"></div>
-                <div id="code-timer" style="text-align:center;margin-bottom:14px;font-size:13px;color:var(--muted);">
-                    Expira en <span id="code-timer-val" style="font-family:'DM Mono',monospace;font-weight:700;color:var(--text);">1:00</span>
-                </div>
-                <div id="code-expired-banner" style="display:none;text-align:center;font-size:13px;margin-bottom:14px;background:#fff1f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;color:var(--error);">
-                    El código ha expirado.
-                    <button onclick="showView('login-view')" style="background:none;border:none;cursor:pointer;font-weight:700;color:#b91c1c;text-decoration:underline;font-size:13px;margin-left:4px;">Solicitar uno nuevo</button>
-                </div>
                 <div class="verify-inputs" id="code-inputs-container">
                     <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="0">
                     <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="1">
@@ -589,28 +582,11 @@ async function doLogin() {
         }
         currentEmp = rows[0];
 
-        // Generar código 2FA y guardarlo con expiración de 1 minuto
-        const code = String(Math.floor(10000 + Math.random() * 90000));
-        try {
-            await tursoQuery(
-                "UPDATE empleados SET codigo_2fa=?, codigo_2fa_expires=datetime('now', '+1 minute') WHERE empresa=? AND cedula=?",
-                [code, EMPRESA, currentEmp.cedula]
-            );
-        } catch(_) {
-            // Fallback si la columna expires aún no existe
-            await tursoQuery(
-                'UPDATE empleados SET codigo_2fa=? WHERE empresa=? AND cedula=?',
-                [code, EMPRESA, currentEmp.cedula]
-            );
-        }
-        currentEmp._code2fa = code;
-
-        // Limpiar inputs 2FA y mostrar vista
+        // Mostrar vista de verificación
         document.querySelectorAll('.code-input').forEach(i => i.value = '');
         showView('verify-view');
         document.querySelector('.code-input')?.focus();
-        startCodeCountdown();
-        showToast('Código generado. Pídelo a tu supervisor.', '');
+        showToast('Autenticado. Pide el código a tu supervisor.', '');
     } catch(e) {
         errEl.textContent = 'Error de conexión. Intenta de nuevo.';
         errEl.classList.add('show');
@@ -653,41 +629,27 @@ async function doVerifyCode() {
     }
     setLoading(btn, true);
     try {
-        // Leer código y expiración frescos desde Turso
+        // Verificar contra el código activo de la empresa
         const rows = await tursoQuery(
-            'SELECT codigo_2fa, codigo_2fa_expires FROM empleados WHERE empresa=? AND cedula=?',
-            [EMPRESA, currentEmp.cedula]
+            "SELECT codigo, expires_at FROM codigos_empresa WHERE empresa=? AND expires_at > datetime('now')",
+            [EMPRESA]
         );
-        const stored     = rows[0]?.codigo_2fa;
-        const expiresStr = rows[0]?.codigo_2fa_expires;
 
-        if (!stored || stored !== code) {
-            errEl.textContent = 'Código incorrecto. Solicita uno nuevo a tu supervisor.';
+        if (!rows.length) {
+            errEl.textContent = 'No hay código activo. Pide a tu supervisor que abra la aplicación.';
             errEl.classList.add('show');
             setLoading(btn, false);
             return;
         }
 
-        // Verificar expiración (si la columna existe)
-        if (expiresStr) {
-            const expiresDate = new Date(expiresStr.replace(' ', 'T') + 'Z');
-            if (Date.now() > expiresDate.getTime()) {
-                await tursoQuery(
-                    'UPDATE empleados SET codigo_2fa=NULL, codigo_2fa_expires=NULL WHERE empresa=? AND cedula=?',
-                    [EMPRESA, currentEmp.cedula]
-                );
-                errEl.textContent = 'El código ha expirado. Solicita uno nuevo a tu supervisor.';
-                errEl.classList.add('show');
-                setLoading(btn, false);
-                return;
-            }
+        if (rows[0].codigo !== code) {
+            errEl.textContent = 'Código incorrecto. Verifica con tu supervisor.';
+            errEl.classList.add('show');
+            setLoading(btn, false);
+            return;
         }
 
-        // Limpiar código usado
-        await tursoQuery(
-            'UPDATE empleados SET codigo_2fa=NULL, codigo_2fa_expires=NULL WHERE empresa=? AND cedula=?',
-            [EMPRESA, currentEmp.cedula]
-        );
+        // Código correcto — continuar (no se invalida, múltiples empleados pueden usarlo)
         // Cargar horario
         const schRows = await tursoQuery(
             'SELECT * FROM horarios WHERE empresa=? AND cedula=?',
@@ -954,38 +916,10 @@ document.getElementById('txt-just').addEventListener('keydown', (e) => {
 });
 
 // ─────────────────────────────────────────────
-// 2FA COUNTDOWN
-// ─────────────────────────────────────────────
-let codeCountdownTimer = null;
-
-function startCodeCountdown() {
-    const expiresAt = Date.now() + 60000;
-    clearInterval(codeCountdownTimer);
-    document.getElementById('code-timer').style.display = 'block';
-    document.getElementById('code-expired-banner').style.display = 'none';
-    document.getElementById('verify-btn').disabled = false;
-
-    codeCountdownTimer = setInterval(() => {
-        const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
-        const m = Math.floor(remaining / 60);
-        const s = remaining % 60;
-        const el = document.getElementById('code-timer-val');
-        if (el) el.textContent = `${m}:${String(s).padStart(2, '0')}`;
-        if (remaining <= 0) {
-            clearInterval(codeCountdownTimer);
-            document.getElementById('code-timer').style.display = 'none';
-            document.getElementById('code-expired-banner').style.display = 'block';
-            document.getElementById('verify-btn').disabled = true;
-        }
-    }, 1000);
-}
-
-// ─────────────────────────────────────────────
 // LOGOUT
 // ─────────────────────────────────────────────
 function doLogout() {
     stopWorkTimer();
-    clearInterval(codeCountdownTimer);
     currentEmp = null; empSchedule = null; todayRecords = [];
     document.getElementById('f-correo').value = '';
     document.getElementById('f-cedula').value = '';
