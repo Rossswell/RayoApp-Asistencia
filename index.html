@@ -23,7 +23,7 @@
         .logo-wordmark { font-size:11.5px; font-weight:700; letter-spacing:0.22em; color:var(--text); }
         .header-empresa { font-size:12px; font-weight:600; color:var(--muted); margin-left:8px; padding:3px 10px; border-radius:8px; background:var(--surface-alt); border:1px solid var(--border); }
         .header-right { margin-left:auto; display:flex; align-items:center; gap:16px; }
-        .live-clock { font-size:13px; color:var(--muted); letter-spacing:0.03em; font-family:'DM Mono',monospace; }
+        .live-clock { font-size:13px; color:var(--muted); letter-spacing:0.03em; }
         .page { position:relative; z-index:1; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:90px 16px 40px; }
         .view { display:none; width:100%; }
         .view.active { display:block; animation:viewIn 0.42s cubic-bezier(0.22,1,0.36,1) both; }
@@ -55,7 +55,7 @@
         .footer-hint { text-align:center; font-size:12px; color:var(--muted); margin-top:16px; }
         .verify-countdown-strip { display:none; align-items:center; justify-content:center; gap:8px; margin-top:18px; padding:10px 16px; background:var(--surface-alt); border:1px solid var(--border); border-radius:12px; font-size:12.5px; color:var(--muted); }
         .verify-countdown-strip.show { display:flex; }
-        .verify-countdown-strip .vc-time { font-family:'DM Mono',monospace; font-weight:700; color:var(--text); font-size:13.5px; min-width:32px; text-align:center; }
+        .verify-countdown-strip .vc-time { font-weight:700; color:var(--text); font-size:13.5px; min-width:32px; text-align:center; }
         .verify-countdown-strip .vc-dot { width:6px; height:6px; border-radius:50%; background:var(--success); flex-shrink:0; animation:pulseDot 2s infinite; }
         .verify-countdown-strip.expiring .vc-dot { background:var(--error); }
         .verify-countdown-strip.expiring .vc-time { color:var(--error); }
@@ -70,12 +70,12 @@
         .intro-sub { font-size:14px; color:var(--muted); }
         .intro-right { text-align:right; }
         @media(max-width:600px){.intro-right{text-align:left;}}
-        .dash-clock { font-size:36px; font-weight:700; color:var(--text); letter-spacing:-0.02em; line-height:1; margin-bottom:6px; font-family:'DM Mono',monospace; }
+        .dash-clock { font-size:36px; font-weight:700; color:var(--text); letter-spacing:-0.02em; line-height:1; margin-bottom:6px; }
         .dash-date { font-size:13px; color:var(--muted); font-weight:500; }
         .schedule-strip { background:var(--surface-alt); border:1px solid var(--border); border-radius:18px; padding:20px 24px; display:flex; align-items:center; gap:24px; margin-bottom:28px; flex-wrap:wrap; }
         .sch-item { display:flex; flex-direction:column; gap:4px; }
         .sch-lbl { font-size:10px; font-weight:800; color:var(--muted); letter-spacing:0.05em; text-transform:uppercase; }
-        .sch-val { font-size:22px; font-weight:700; color:var(--text); letter-spacing:-0.02em; font-family:'DM Mono',monospace; }
+        .sch-val { font-size:22px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
         .sch-arrow { color:var(--border); display:flex; align-items:center; }
         .sch-badge { margin-left:auto; background:rgba(234,179,8,0.1); color:#eab308; padding:6px 14px; border-radius:10px; font-size:11px; font-weight:800; display:none; align-items:center; gap:6px; border:1px solid rgba(234,179,8,0.2); text-transform:uppercase; }
         .sch-badge.show { display:flex; }
@@ -99,7 +99,7 @@
         @keyframes pulseDot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:.5} }
         .work-duration { margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
         .work-duration-label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; }
-        .work-duration-time { font-size:26px; font-weight:700; color:var(--success); letter-spacing:-0.02em; line-height:1; font-family:'DM Mono',monospace; }
+        .work-duration-time { font-size:26px; font-weight:700; color:var(--success); letter-spacing:-0.02em; line-height:1; }
         .actions-grid-premium { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:36px; }
         @media(max-width:500px){.actions-grid-premium{grid-template-columns:1fr;}}
         .action-btn-card { background:var(--surface); border:1.5px solid var(--border); border-radius:20px; padding:24px; text-align:left; cursor:pointer; transition:all .25s; position:relative; overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow-sm); }
@@ -122,8 +122,8 @@
         .history-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:10px; }
         .history-item { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; background:var(--surface); border:1px solid var(--border); border-radius:12px; gap:12px; }
         .hi-left { display:flex; flex-direction:column; gap:2px; }
-        .hi-date { font-size:11px; color:var(--muted); font-family:'DM Mono',monospace; }
-        .hi-time { font-size:14px; font-weight:700; color:var(--text); font-family:'DM Mono',monospace; }
+        .hi-date { font-size:11px; color:var(--muted); }
+        .hi-time { font-size:14px; font-weight:700; color:var(--text); }
         .hi-msg { font-size:11px; color:var(--muted); font-style:italic; }
         .hi-type-badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; text-transform:uppercase; flex-shrink:0; }
         .hi-type-badge.in { background:#dcfce7; color:#166534; }
@@ -976,10 +976,16 @@ function closeJustModal() {
 
 document.getElementById('btn-save-just').addEventListener('click', async () => {
     const justif = document.getElementById('txt-just').value.trim();
+    const ta = document.getElementById('txt-just');
     if (!justif) {
-        showToast('Escribe una justificación para continuar.', 'err');
+        ta.style.borderColor = 'var(--error)';
+        ta.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
+        ta.focus();
+        ta.placeholder = '⚠ Debes escribir una justificación para continuar...';
         return;
     }
+    ta.style.borderColor = '';
+    ta.style.boxShadow = '';
     closeJustModal();
     if (justifCallback) await justifCallback(justif);
 });
