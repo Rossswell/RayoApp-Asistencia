@@ -697,18 +697,21 @@ function stopVerifyCountdown() {
 
 async function startVerifyCountdown() {
     stopVerifyCountdown();
-    const strip   = document.getElementById('verify-countdown-strip');
-    const timeEl  = document.getElementById('verify-countdown-time');
+    const strip  = document.getElementById('verify-countdown-strip');
+    const timeEl = document.getElementById('verify-countdown-time');
 
+    // Solo trae códigos que AÚN NO han expirado
     async function fetchAndSync() {
         try {
             const rows = await tursoQuery(
-                'SELECT expires_at FROM codigos_empresa WHERE empresa=?',
+                "SELECT expires_at FROM codigos_empresa WHERE empresa=? AND expires_at > datetime('now')",
                 [EMPRESA]
             );
             if (!rows.length || !rows[0].expires_at) return null;
             const exp = String(rows[0].expires_at).replace(' ', 'T') + 'Z';
-            return new Date(exp).getTime();
+            const ts = new Date(exp).getTime();
+            // Verificar que sea realmente en el futuro (por si acá el timezone difiere)
+            return ts > Date.now() ? ts : null;
         } catch { return null; }
     }
 
@@ -716,8 +719,10 @@ async function startVerifyCountdown() {
     if (!expiresAt) { strip.classList.remove('show'); return; }
 
     strip.classList.add('show');
+    let expired = false;
 
     function tick() {
+        if (expired) return;
         const secsLeft = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
         const m = Math.floor(secsLeft / 60);
         const s = secsLeft % 60;
@@ -725,21 +730,35 @@ async function startVerifyCountdown() {
         strip.classList.toggle('expiring', secsLeft <= 10);
 
         if (secsLeft === 0) {
-            // Code rotated — clear inputs and resync
+            expired = true;
+            clearInterval(verifyCountdownTimer);
+            verifyCountdownTimer = null;
+
             document.querySelectorAll('.code-input').forEach(i => i.value = '');
             document.querySelector('.code-input')?.focus();
             const errEl = document.getElementById('verify-err');
             errEl.textContent = 'El código se renovó. Pide el nuevo a tu supervisor.';
             errEl.classList.add('show');
-            clearInterval(verifyCountdownTimer);
-            // Resync after a short delay to let DB rotate
-            setTimeout(async () => {
-                errEl.classList.remove('show');
-                expiresAt = await fetchAndSync();
-                if (!expiresAt) { strip.classList.remove('show'); return; }
-                verifyCountdownTimer = setInterval(tick, 1000);
-                tick();
-            }, 2000);
+            strip.classList.remove('show', 'expiring');
+
+            // Esperar a que el supervisor genere el nuevo código (polling cada 5s, max 2 min)
+            let attempts = 0;
+            const maxAttempts = 24;
+            const poll = setInterval(async () => {
+                attempts++;
+                const newExpiry = await fetchAndSync();
+                if (newExpiry) {
+                    clearInterval(poll);
+                    errEl.classList.remove('show');
+                    expiresAt = newExpiry;
+                    expired = false;
+                    strip.classList.add('show');
+                    verifyCountdownTimer = setInterval(tick, 1000);
+                    tick();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(poll);
+                }
+            }, 5000);
         }
     }
 
