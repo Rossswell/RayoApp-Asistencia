@@ -986,8 +986,9 @@ document.getElementById('btn-save-just').addEventListener('click', async () => {
     }
     ta.style.borderColor = '';
     ta.style.boxShadow = '';
+    const cb = justifCallback;
     closeJustModal();
-    if (justifCallback) await justifCallback(justif);
+    if (cb) await cb(justif);
 });
 
 document.getElementById('modal-just').addEventListener('click', (e) => {
