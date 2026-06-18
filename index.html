@@ -2049,7 +2049,7 @@
             try {
                 // Buscar empleado por correo
                 const empRows = await tursoQuery(
-                    'SELECT * FROM empleados WHERE empresa=? AND correo=?',
+                    'SELECT * FROM empleados WHERE empresa=? AND LOWER(correo)=LOWER(?)',
                     [EMPRESA, AUTO_EMAIL]
                 );
                 if (!empRows.length) {
@@ -2130,7 +2130,7 @@
                             <textarea id="auto-just-txt" class="just-textarea" placeholder="Escribe el motivo de tu tardanza…" style="height:100px;margin-bottom:0"></textarea>
                         </div>
                         <div id="auto-just-err" class="global-err" style="margin-top:8px;margin-bottom:0"></div>
-                        <button class="btn btn-primary" id="auto-just-btn" onclick="autoSubmitLate(event,'${emp.cedula}','${mensaje}',${lateMins})" style="margin-top:16px">
+                        <button class="btn btn-primary" id="auto-just-btn" onclick="autoSubmitLate(event,'${emp.cedula}','${emp.nombre||''}','${emp.area||''}','${mensaje}',${lateMins})" style="margin-top:16px">
                             <div class="btn-spinner"></div>
                             <span class="btn-lbl">Registrar entrada tardía</span>
                         </button>`
@@ -2145,7 +2145,7 @@
                         '',
                         `<div style="display:flex;justify-content:center;padding:8px 0"><div class="loading-spinner-ring" style="border-top-color:var(--accent)"></div></div>`
                     );
-                    await autoSaveCheckin(emp.cedula, mensaje, '', lateMins > 0 ? lateMins : 0);
+                    await autoSaveCheckin(emp.cedula, emp.nombre || '', emp.area || '', mensaje, '', lateMins > 0 ? lateMins : 0);
                     autoSetState(
                         `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
                         'Entrada registrada',
@@ -2166,7 +2166,7 @@
             }
         }
 
-        async function autoSubmitLate(e, cedula, mensaje, lateMins) {
+        async function autoSubmitLate(e, cedula, empleado, area, mensaje, lateMins) {
             const btn = document.getElementById('auto-just-btn');
             const err = document.getElementById('auto-just-err');
             const justif = document.getElementById('auto-just-txt')?.value.trim() || '';
@@ -2178,7 +2178,7 @@
             }
             setLoading(btn, true);
             try {
-                await autoSaveCheckin(cedula, mensaje, justif, lateMins);
+                await autoSaveCheckin(cedula, empleado, area, mensaje, justif, lateMins);
                 autoSetState(
                     `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
                     'Entrada registrada',
@@ -2194,16 +2194,15 @@
             }
         }
 
-        async function autoSaveCheckin(cedula, mensaje, justif, lateMins) {
+        async function autoSaveCheckin(cedula, empleado, area, mensaje, justif, lateMins) {
             const now = new Date();
             const today = formatDate(now);
             const hora = formatTime(now);
             const weekNum = getWeekNumber(now);
             const semana = `Semana ${weekNum}`;
-            const semana_anio = `${now.getFullYear()}-S${String(weekNum).padStart(2,'0')}`;
             await tursoQuery(
-                `INSERT INTO asistencias (empresa, cedula, fecha, hora, tipo, semana, semana_anio, mensaje, justifEntrada, minTarde) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-                [EMPRESA, cedula, today, hora, 'ENTRADA', semana, semana_anio, mensaje, justif || '', lateMins || 0]
+                `INSERT INTO asistencias (empresa, cedula, empleado, area, fecha, hora, tipo, semana, mensaje, justifEntrada, minTarde) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+                [EMPRESA, cedula, empleado || '', area || '', today, hora, 'ENTRADA', semana, mensaje, justif || '', lateMins || 0]
             );
         }
 
