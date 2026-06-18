@@ -1,1039 +1,2217 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RayoApp — Portal de Empleados</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --yellow: #facc15; --yellow-glow: rgba(250,204,21,0.25); --accent: #facc15; --accent-glow: rgba(250,204,21,0.4);
-            --bg: #f8fafc; --surface: #ffffff; --surface-alt: #f1f5f9; --border: #e2e8f0;
-            --text: #1e293b; --muted: #64748b; --white: #ffffff;
-            --success: #22c55e; --error: #ef4444; --success-glow: rgba(34,197,94,0.2); --error-glow: rgba(239,68,68,0.2);
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1); --shadow-premium: 0 25px 50px -12px rgba(0,0,0,0.08);
+            --yellow: #facc15;
+            --yellow-glow: rgba(250, 204, 21, 0.25);
+            --accent: #facc15;
+            --accent-glow: rgba(250, 204, 21, 0.4);
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-alt: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --muted: #64748b;
+            --white: #ffffff;
+            --success: #22c55e;
+            --error: #ef4444;
+            --success-glow: rgba(34, 197, 94, 0.2);
+            --error-glow: rgba(239, 68, 68, 0.2);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
         }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'DM Sans',sans-serif; -webkit-font-smoothing:antialiased; }
-        body { background-color:var(--bg); }
-        .site-header { position:fixed; top:0; left:0; right:0; z-index:200; height:72px; display:flex; align-items:center; justify-content:space-between; padding:0 40px; background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); box-shadow:0 1px 10px rgba(0,0,0,0.05); }
-        .header-logo { display:flex; align-items:center; gap:10px; }
-        .logo-bolt { width:22px; height:38px; flex-shrink:0; }
-        .logo-wordmark { font-size:11.5px; font-weight:700; letter-spacing:0.22em; color:var(--text); }
-        .header-empresa { font-size:12px; font-weight:600; color:var(--muted); margin-left:8px; padding:3px 10px; border-radius:8px; background:var(--surface-alt); border:1px solid var(--border); }
-        .header-right { margin-left:auto; display:flex; align-items:center; gap:16px; }
-        .live-clock { font-size:13px; color:var(--muted); letter-spacing:0.03em; }
-        .page { position:relative; z-index:1; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:90px 16px 40px; }
-        .view { display:none; width:100%; }
-        .view.active { display:block; animation:viewIn 0.42s cubic-bezier(0.22,1,0.36,1) both; }
-        @keyframes viewIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-        .card { background:var(--surface); border-radius:20px; border:1px solid var(--border); box-shadow:var(--shadow-premium); overflow:hidden; margin:0 auto; }
-        #login-view,#verify-view { max-width:420px; }
-        .login-hero { padding:42px 36px 32px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,var(--surface-alt) 0%,var(--surface) 100%); }
-        .bolt-badge { width:54px; height:54px; background:var(--yellow); border-radius:15px; display:flex; align-items:center; justify-content:center; margin-bottom:22px; box-shadow:0 6px 20px var(--yellow-glow); }
-        .login-title { font-size:23px; font-weight:700; letter-spacing:-0.025em; color:var(--text); margin-bottom:7px; }
-        .login-sub { font-size:14px; color:var(--muted); line-height:1.55; }
-        .login-body { padding:28px 36px 34px; }
-        .field { margin-bottom:18px; }
-        .field-label { display:block; margin-bottom:7px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); }
-        .field-wrap { position:relative; }
-        .field-ico { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:17px; height:17px; color:#b0b7c0; pointer-events:none; }
-        .field-input { width:100%; height:48px; padding:0 16px 0 43px; border:1.5px solid var(--border); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:14.5px; color:var(--text); background:#fafbfc; transition:border-color .18s,box-shadow .18s; outline:none; }
-        .field-input:focus { border-color:var(--yellow); background:#fff; box-shadow:0 0 0 4px var(--yellow-glow); }
-        .field-input.is-error { border-color:var(--error); box-shadow:0 0 0 4px rgba(239,68,68,0.1); }
-        .btn { width:100%; height:50px; border:none; border-radius:13px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; transition:all .22s; display:flex; align-items:center; justify-content:center; gap:9px; }
-        .btn-primary { background:var(--yellow); color:#000; }
-        .btn-primary:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 6px 22px var(--yellow-glow); }
-        .btn-primary:disabled { opacity:0.65; pointer-events:none; }
-        .btn-spinner,.btn-card-spinner { width:20px; height:20px; border:2.5px solid rgba(0,0,0,0.1); border-top-color:rgba(0,0,0,0.8); border-radius:50%; animation:spin .8s linear infinite; display:none; }
-        .btn.loading .btn-spinner { display:block; }
-        .btn.loading .btn-lbl { display:none; }
-        @keyframes spin { to{transform:rotate(360deg)} }
-        .global-err { font-size:13px; color:var(--error); background:#fff1f2; border:1px solid #fecaca; border-radius:10px; padding:10px 14px; margin-bottom:14px; display:none; }
-        .global-err.show { display:block; }
-        .footer-hint { text-align:center; font-size:12px; color:var(--muted); margin-top:16px; }
-        .verify-countdown-strip { display:none; align-items:center; justify-content:center; gap:8px; margin-top:18px; padding:10px 16px; background:var(--surface-alt); border:1px solid var(--border); border-radius:12px; font-size:12.5px; color:var(--muted); }
-        .verify-countdown-strip.show { display:flex; }
-        .verify-countdown-strip .vc-time { font-weight:700; color:var(--text); font-size:13.5px; min-width:32px; text-align:center; }
-        .verify-countdown-strip .vc-dot { width:6px; height:6px; border-radius:50%; background:var(--success); flex-shrink:0; animation:pulseDot 2s infinite; }
-        .verify-countdown-strip.expiring .vc-dot { background:var(--error); }
-        .verify-countdown-strip.expiring .vc-time { color:var(--error); }
-        #dashboard-view { max-width:820px; }
-        .dash-card { border:1px solid var(--border); padding:48px; background:var(--surface); box-shadow:var(--shadow-premium); position:relative; }
-        @media(max-width:600px){.dash-card{padding:24px 18px;}}
-        .dash-intro { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:36px; gap:20px; }
-        @media(max-width:600px){.dash-intro{flex-direction:column;}}
-        .intro-tag { display:block; font-size:11px; font-weight:800; color:var(--muted); letter-spacing:0.15em; margin-bottom:8px; text-transform:uppercase; }
-        .intro-title { font-size:32px; font-weight:700; color:var(--text); line-height:1.1; margin-bottom:6px; }
-        .name-highlight { color:var(--accent); }
-        .intro-sub { font-size:14px; color:var(--muted); }
-        .intro-right { text-align:right; }
-        @media(max-width:600px){.intro-right{text-align:left;}}
-        .dash-clock { font-size:36px; font-weight:700; color:var(--text); letter-spacing:-0.02em; line-height:1; margin-bottom:6px; }
-        .dash-date { font-size:13px; color:var(--muted); font-weight:500; }
-        .schedule-strip { background:var(--surface-alt); border:1px solid var(--border); border-radius:18px; padding:20px 24px; display:flex; align-items:center; gap:24px; margin-bottom:28px; flex-wrap:wrap; }
-        .sch-item { display:flex; flex-direction:column; gap:4px; }
-        .sch-lbl { font-size:10px; font-weight:800; color:var(--muted); letter-spacing:0.05em; text-transform:uppercase; }
-        .sch-val { font-size:22px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
-        .sch-arrow { color:var(--border); display:flex; align-items:center; }
-        .sch-badge { margin-left:auto; background:rgba(234,179,8,0.1); color:#eab308; padding:6px 14px; border-radius:10px; font-size:11px; font-weight:800; display:none; align-items:center; gap:6px; border:1px solid rgba(234,179,8,0.2); text-transform:uppercase; }
-        .sch-badge.show { display:flex; }
-        .btn-toggle-sch { background:var(--surface); border:1px solid var(--border); color:var(--muted); font-size:11px; font-weight:700; padding:8px 14px; border-radius:10px; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:6px; text-transform:uppercase; margin-left:auto; }
-        .btn-toggle-sch:hover { border-color:var(--accent); color:var(--text); }
-        .btn-toggle-sch svg { transition:transform .3s; }
-        .btn-toggle-sch.active svg { transform:rotate(180deg); }
-        .full-sch-collapsible { max-height:0; overflow:hidden; transition:max-height .4s cubic-bezier(0.4,0,0.2,1); }
-        .full-sch-collapsible.show { max-height:600px; margin-bottom:28px; }
-        .full-sch-table { background:var(--surface-alt); border-radius:18px; padding:20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; border:1px solid var(--border); }
-        .sch-day-card { background:var(--surface); padding:12px; border-radius:12px; border:1px solid var(--border); text-align:center; }
-        .sch-day-card.today { border-color:var(--accent); box-shadow:0 0 0 3px var(--yellow-glow); }
-        .sch-day-card.inactive { opacity:0.45; }
-        .sch-day-name { display:block; font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
-        .sch-day-time { display:block; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; color:var(--text); }
-        .status-summary { margin-bottom:28px; }
-        .summary-lbl { display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em; }
-        .summary-box { display:flex; align-items:center; gap:12px; font-size:17px; font-weight:600; color:var(--muted); }
-        .status-dot { width:10px; height:10px; border-radius:50%; background:var(--border); flex-shrink:0; }
-        .status-dot.active { background:var(--success); box-shadow:0 0 10px var(--success); animation:pulseDot 2s infinite; }
-        @keyframes pulseDot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:.5} }
-        .work-duration { margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
-        .work-duration-label { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; }
-        .work-duration-time { font-size:26px; font-weight:700; color:var(--success); letter-spacing:-0.02em; line-height:1; }
-        .actions-grid-premium { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:36px; }
-        @media(max-width:500px){.actions-grid-premium{grid-template-columns:1fr;}}
-        .action-btn-card { background:var(--surface); border:1.5px solid var(--border); border-radius:20px; padding:24px; text-align:left; cursor:pointer; transition:all .25s; position:relative; overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow-sm); }
-        .action-btn-card:hover:not(:disabled) { border-color:var(--accent); transform:translateY(-4px); box-shadow:var(--shadow-lg); }
-        .action-btn-card:disabled { opacity:0.4; cursor:not-allowed; filter:grayscale(.5); }
-        .action-btn-card.btn-in { border-left:4px solid var(--success); }
-        .action-btn-card.btn-out { border-left:4px solid var(--error); }
-        .btn-card-top { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
-        .status-light { width:14px; height:14px; border-radius:50%; background:var(--border); }
-        .btn-in .status-light { background:#065f46; }
-        .btn-out .status-light { background:#7f1d1d; }
-        .btn-card-title { color:var(--text); font-size:17px; font-weight:700; }
-        .btn-card-desc { color:var(--muted); font-size:13px; font-weight:500; }
-        .btn-card-spinner { position:absolute; top:24px; right:24px; }
-        .action-btn-card.loading .btn-card-spinner { display:block; }
-        .recent-history { margin-top:8px; }
-        .history-title { font-size:11px; font-weight:800; color:var(--muted); letter-spacing:0.12em; margin-bottom:14px; text-transform:uppercase; }
-        .history-scroll { display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; padding-right:4px; }
-        .history-scroll::-webkit-scrollbar { width:4px; }
-        .history-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:10px; }
-        .history-item { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; background:var(--surface); border:1px solid var(--border); border-radius:12px; gap:12px; }
-        .hi-left { display:flex; flex-direction:column; gap:2px; }
-        .hi-date { font-size:11px; color:var(--muted); }
-        .hi-time { font-size:14px; font-weight:700; color:var(--text); }
-        .hi-msg { font-size:11px; color:var(--muted); font-style:italic; }
-        .hi-type-badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; text-transform:uppercase; flex-shrink:0; }
-        .hi-type-badge.in { background:#dcfce7; color:#166534; }
-        .hi-type-badge.out { background:#fee2e2; color:#991b1b; }
-        .dash-footer { padding-top:24px; display:flex; justify-content:center; }
-        .btn-logout { background:none; border:none; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:10px; transition:all .2s; }
-        .btn-logout:hover { color:var(--error); background:#fff1f2; }
-        .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(16px); background:#111827; color:#fff; padding:11px 22px; border-radius:40px; font-size:13px; font-weight:500; box-shadow:0 8px 28px rgba(0,0,0,0.18); z-index:9999; opacity:0; transition:all .38s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; white-space:nowrap; }
-        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-        .toast.ok { background:#14532d; }
-        .toast.err { background:#7f1d1d; }
-        .loading-overlay { display:none; position:fixed; inset:0; z-index:900; background:var(--bg); align-items:center; justify-content:center; flex-direction:column; gap:20px; }
-        .loading-overlay.active { display:flex; }
-        .loading-spinner-ring { width:52px; height:52px; border:4px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .9s linear infinite; }
-        .loading-overlay-text { font-size:14px; font-weight:600; color:var(--muted); }
-        .modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.4); backdrop-filter:blur(8px); z-index:1000; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:all .3s; }
-        .modal-overlay.active { opacity:1; pointer-events:auto; }
-        .modal-card { background:var(--surface); width:90%; max-width:440px; border-radius:24px; padding:32px; box-shadow:var(--shadow-premium); transform:translateY(20px) scale(.95); transition:all .4s cubic-bezier(0.34,1.56,0.64,1); border:1px solid var(--border); }
-        .modal-overlay.active .modal-card { transform:translateY(0) scale(1); }
-        .modal-title { font-size:20px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:12px; margin-bottom:8px; }
-        .modal-desc { font-size:14px; color:var(--muted); line-height:1.5; margin-bottom:20px; }
-        .just-textarea { width:100%; height:120px; background:var(--surface-alt); border:2px solid var(--border); border-radius:16px; padding:16px; font-size:14px; color:var(--text); resize:none; transition:all .2s; margin-bottom:20px; outline:none; font-family:'DM Sans',sans-serif; }
-        .just-textarea:focus { border-color:var(--accent); background:var(--surface); box-shadow:0 0 0 4px var(--yellow-glow); }
-        .modal-actions { display:flex; gap:12px; }
-        .btn-modal-save { flex:1; background:var(--accent); color:#000; border:none; padding:14px; border-radius:14px; font-weight:700; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; font-size:14px; }
-        .btn-modal-save:hover { transform:translateY(-2px); box-shadow:0 4px 12px var(--yellow-glow); }
-        .btn-modal-save.loading .btn-lbl { display:none; }
-        .btn-modal-save.loading .btn-card-spinner { display:block; position:static; }
-        .btn-modal-cancel { padding:14px 20px; background:var(--surface-alt); border:1px solid var(--border); border-radius:14px; color:var(--muted); font-weight:700; cursor:pointer; transition:all .2s; }
-        .btn-modal-cancel:hover { background:#ffe4e6; color:var(--error); border-color:#fecaca; }
-        .verify-inputs { display:flex; gap:10px; justify-content:center; margin:28px 0; }
-        .code-input { width:52px; height:66px; text-align:center; font-size:30px; font-weight:800; border:2px solid var(--border); border-radius:14px; background:#fafbfc; color:var(--text); transition:all .2s; outline:none; }
-        .code-input:focus { border-color:var(--yellow); background:#fff; box-shadow:0 0 0 4px var(--yellow-glow); transform:translateY(-3px); }
-        .no-schedule-msg { text-align:center; padding:32px 0; color:var(--muted); font-size:14px; }
-    </style>
-</head>
-<body>
 
-<header class="site-header">
-    <div class="header-logo">
-        <svg class="logo-bolt" viewBox="0 0 100 200">
-            <path d="M60,10 L25,110 L50,110 L40,190 L75,90 L50,90 Z" fill="#FACC15"/>
-        </svg>
-        <span class="logo-wordmark">RAYOAPP</span>
-        <span class="header-empresa" id="hdr-empresa"></span>
-    </div>
-    <div class="header-right">
-        <span class="live-clock" id="hdr-clock"></span>
-    </div>
-</header>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'DM Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
-<main class="page">
+        body {
+            background-color: var(--bg);
+        }
 
-    <!-- LOGIN -->
-    <div id="login-view" class="view active">
-        <div class="card">
-            <div class="login-hero">
-                <div class="bolt-badge">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                        <polyline points="10 17 15 12 10 7"/>
-                        <line x1="15" y1="12" x2="3" y2="12"/>
-                    </svg>
-                </div>
-                <h1 class="login-title">Acceso al portal</h1>
-                <p class="login-sub">Ingresa con tu correo corporativo y tu número de cédula para registrar tu asistencia.</p>
-            </div>
-            <div class="login-body">
-                <div class="global-err" id="global-err"></div>
-                <div class="field">
-                    <label class="field-label" for="f-correo">Correo electrónico</label>
-                    <div class="field-wrap">
-                        <svg class="field-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                        <input type="email" id="f-correo" class="field-input" placeholder="tu@correo.com" autocomplete="email">
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="field-label" for="f-cedula">Cédula de identidad</label>
-                    <div class="field-wrap">
-                        <svg class="field-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        <input type="text" id="f-cedula" class="field-input" placeholder="Ej: 12345678" inputmode="numeric">
-                    </div>
-                </div>
-                <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
-                    <div class="btn-spinner"></div>
-                    <span class="btn-lbl">Ingresar al portal</span>
-                </button>
-                <p class="footer-hint">¿Problemas para ingresar? Contacta a tu supervisor.</p>
-            </div>
-        </div>
-    </div>
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 10px rgba(0, 0, 0, 0.05);
+        }
 
-    <!-- 2FA -->
-    <div id="verify-view" class="view">
-        <div class="card">
-            <div class="login-hero">
-                <div class="bolt-badge">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
-                </div>
-                <h1 class="login-title">Paso de seguridad</h1>
-                <p class="login-sub">Ingresa el código de 5 dígitos que puedes ver en la aplicación de tu supervisor.</p>
-            </div>
-            <div class="login-body">
-                <div class="global-err" id="verify-err"></div>
-                <div class="verify-inputs" id="code-inputs-container">
-                    <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="0">
-                    <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="1">
-                    <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="2">
-                    <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="3">
-                    <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="4">
-                </div>
-                <button class="btn btn-primary" id="verify-btn" onclick="doVerifyCode()">
-                    <div class="btn-spinner"></div>
-                    <span class="btn-lbl">Verificar y continuar</span>
-                </button>
-                <button class="btn-logout" onclick="stopVerifyCountdown();showView('login-view')" style="margin-top:14px;width:100%;justify-content:center;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Volver al inicio
-                </button>
-                <div class="verify-countdown-strip" id="verify-countdown-strip">
-                    <span class="vc-dot"></span>
-                    <span>Código se renueva en</span>
-                    <span class="vc-time" id="verify-countdown-time">-:--</span>
-                </div>
-            </div>
-        </div>
-    </div>
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    <!-- LOADING -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="loading-spinner-ring"></div>
-        <p class="loading-overlay-text">Cargando tu información…</p>
-    </div>
+        .logo-bolt {
+            width: 22px;
+            height: 38px;
+            flex-shrink: 0;
+        }
 
-    <!-- DASHBOARD -->
-    <div id="dashboard-view" class="view">
-        <div class="card dash-card">
-            <div class="dash-intro">
-                <div class="intro-left">
-                    <span class="intro-tag">PANEL DE ASISTENCIA</span>
-                    <h2 class="intro-title">Hola, <span id="emp-nombre-dash" class="name-highlight">Empleado</span></h2>
-                    <p class="intro-sub">Cédula: <span id="emp-cedula-dash">---</span> · <span id="emp-area-dash">---</span></p>
-                </div>
-                <div class="intro-right">
-                    <div id="emp-clock" class="dash-clock">00:00:00</div>
-                    <div id="emp-date" class="dash-date">---</div>
-                </div>
-            </div>
+        .logo-wordmark {
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            color: var(--text);
+        }
 
-            <div class="schedule-strip">
-                <div class="sch-item">
-                    <span class="sch-lbl">ENTRADA PROGRAMADA</span>
-                    <span class="sch-val" id="sch-in">--:--</span>
-                </div>
-                <div class="sch-arrow">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </div>
-                <div class="sch-item">
-                    <span class="sch-lbl">SALIDA PROGRAMADA</span>
-                    <span class="sch-val" id="sch-out">--:--</span>
-                </div>
-                <div class="sch-badge" id="sch-status-badge">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
-                    <span>Tarde</span>
-                </div>
-                <button class="btn-toggle-sch" id="btn-toggle-sch" onclick="toggleSchedule()">
-                    <span>Horario completo</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-                </button>
-            </div>
+        .header-empresa {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-left: 8px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+        }
 
-            <div id="full-sch-collapsible" class="full-sch-collapsible">
-                <div class="full-sch-table" id="full-sch-list"></div>
-            </div>
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
 
-            <div class="status-summary">
-                <span class="summary-lbl">Estado actual</span>
-                <div class="summary-box">
-                    <div class="status-dot" id="status-dot-dash"></div>
-                    <span id="status-lbl-dash">Sin registros hoy</span>
-                    <div id="work-duration-dash" class="work-duration" style="display:none">
-                        <span class="work-duration-label">Tiempo trabajado</span>
-                        <span class="work-duration-time" id="work-duration-val">00:00:00</span>
-                    </div>
-                </div>
-            </div>
+        .live-clock {
+            font-size: 13px;
+            color: var(--muted);
+            letter-spacing: 0.03em;
+        }
 
-            <div class="actions-grid-premium">
-                <button class="action-btn-card btn-in" id="btn-in-dash" onclick="doCheckIn()">
-                    <div class="btn-card-spinner"></div>
-                    <div class="btn-card-top">
-                        <div class="status-light"></div>
-                        <span class="btn-card-title">Registrar Entrada</span>
-                    </div>
-                    <span class="btn-card-desc" id="btn-in-desc">Marca tu llegada</span>
-                </button>
-                <button class="action-btn-card btn-out" id="btn-out-dash" onclick="doCheckOut()">
-                    <div class="btn-card-spinner"></div>
-                    <div class="btn-card-top">
-                        <div class="status-light"></div>
-                        <span class="btn-card-title">Registrar Salida</span>
-                    </div>
-                    <span class="btn-card-desc" id="btn-out-desc">Marca tu partida</span>
-                </button>
-            </div>
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 90px 16px 40px;
+        }
 
-            <div class="recent-history">
-                <h3 class="history-title">Registros recientes</h3>
-                <div class="history-scroll" id="history-scroll-dash"></div>
-            </div>
+        .view {
+            display: none;
+            width: 100%;
+        }
 
-            <div class="dash-footer">
-                <button class="btn-logout" onclick="doLogout()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Cerrar sesión
-                </button>
-            </div>
-        </div>
-    </div>
+        .view.active {
+            display: block;
+            animation: viewIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
 
-</main>
+        @keyframes viewIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
 
-<div class="toast" id="toast"></div>
-
-<!-- Modal Justificación -->
-<div class="modal-overlay" id="modal-just">
-    <div class="modal-card">
-        <div class="modal-title">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Justificar Registro
-        </div>
-        <p class="modal-desc" id="modal-just-desc">Tu registro está fuera del horario habitual. Indica el motivo.</p>
-        <textarea class="just-textarea" id="txt-just" placeholder="Escribe tu justificación aquí..."></textarea>
-        <div class="modal-actions">
-            <button class="btn-modal-cancel" onclick="closeJustModal()">Cancelar</button>
-            <button class="btn-modal-save" id="btn-save-just">
-                <div class="btn-card-spinner"></div>
-                <span class="btn-lbl">Guardar Registro</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<script>
-// ─────────────────────────────────────────────
-// CONFIG
-// ─────────────────────────────────────────────
-const TURSO_URL   = 'https://rayoapp-db-rossswell.aws-us-west-2.turso.io/v2/pipeline';
-const TURSO_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Nzg5NTE2ODQsImlkIjoiMDE5ZTMxYzgtNmIwMS03ZTgyLTk2ZDUtOWIwZWUwZDNlN2U4IiwicmlkIjoiNjUzZTY5OGMtODZkMS00YjhhLWIzOWMtNmYzZTcyMmQwMjk3In0.5VD8bvwdvOuOKMDz8y3gZFE0L5dxNukuwqyz3sl4LbRjFHS0oY-rt5LF3cumY3wlR1nkzcA5nJ6oGN1UcltzAQ';
-
-const urlParams = new URLSearchParams(window.location.search);
-const EMPRESA = urlParams.get('empresa') || 'flash_high';
-const EMPRESA_LABELS = { flash_high:'Flash High', mmx:'MMX', activo_motors:'Activo Motors' };
-document.getElementById('hdr-empresa').textContent = EMPRESA_LABELS[EMPRESA] || EMPRESA;
-
-// State
-let currentEmp   = null;
-let empSchedule  = null;
-let toleranceMins = 0;
-let todayRecords = [];
-let isProcessing = false;
-let justifCallback = null;
-let workTimer    = null;
-
-// ─────────────────────────────────────────────
-// TURSO
-// ─────────────────────────────────────────────
-function toTursoArg(v) {
-    if (v === null || v === undefined) return { type:'null' };
-    if (typeof v === 'number') return Number.isInteger(v) ? { type:'integer', value:String(v) } : { type:'float', value:String(v) };
-    return { type:'text', value:String(v) };
-}
-
-async function tursoQuery(sql, args = []) {
-    const res = await fetch(TURSO_URL, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${TURSO_TOKEN}`, 'Content-Type':'application/json' },
-        body: JSON.stringify({ requests: [
-            { type:'execute', stmt:{ sql, args: args.map(toTursoArg) } },
-            { type:'close' }
-        ]})
-    });
-    const data = await res.json();
-    if (data.results?.[0]?.type === 'error') throw new Error(data.results[0].error.message);
-    const result = data.results[0].response?.result;
-    if (!result) return [];
-    return result.rows.map(row => Object.fromEntries(result.cols.map((c,i) => [c.name, row[i]?.value ?? null])));
-}
-
-// ─────────────────────────────────────────────
-// UTILS
-// ─────────────────────────────────────────────
-function toMins(str) {
-    if (!str) return null;
-    const m = str.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);
-    if (!m) return null;
-    let h = parseInt(m[1]), mins = parseInt(m[2]), ampm = m[3].toLowerCase();
-    if (ampm === 'pm' && h < 12) h += 12;
-    if (ampm === 'am' && h === 12) h = 0;
-    return h * 60 + mins;
-}
-
-function minsToDisplay(m) {
-    const h = Math.floor(m / 60), min = m % 60;
-    const ampm = h >= 12 ? 'pm' : 'am';
-    const h12 = h % 12 || 12;
-    return `${h12}:${String(min).padStart(2,'0')} ${ampm}`;
-}
-
-function getWeekNumber(d) {
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-    return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-}
-
-function formatDate(d) {
-    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-}
-
-function formatTime(d) {
-    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-}
-
-function dayName(jsDay) {
-    return ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'][jsDay];
-}
-
-function showView(id) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById(id)?.classList.add('active');
-}
-
-function showToast(msg, type = '') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `toast ${type}`;
-    requestAnimationFrame(() => { t.classList.add('show'); });
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3200);
-}
-
-function setLoading(el, on) {
-    if (!el) return;
-    on ? el.classList.add('loading') : el.classList.remove('loading');
-    if (el.tagName === 'BUTTON') el.disabled = on;
-}
-
-// ─────────────────────────────────────────────
-// CLOCK
-// ─────────────────────────────────────────────
-function updateClock() {
-    const now = new Date();
-    const timeStr = formatTime(now);
-    const dateOpts = { weekday:'long', day:'numeric', month:'short', year:'numeric' };
-    const dateStr = now.toLocaleDateString('es-VE', dateOpts).toUpperCase();
-    const el = document.getElementById('hdr-clock');
-    const ec = document.getElementById('emp-clock');
-    const ed = document.getElementById('emp-date');
-    if (el) el.textContent = timeStr;
-    if (ec) ec.textContent = timeStr;
-    if (ed) ed.textContent = dateStr;
-    updateLateIndicator();
-    updateWorkDuration();
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// ─────────────────────────────────────────────
-// SCHEDULE
-// ─────────────────────────────────────────────
-function parseScheduleSummary(summary) {
-    if (!summary || summary === 'No asignado') return null;
-    const DAYS = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
-    const result = {};
-    DAYS.forEach(d => result[d] = { activo:false });
-    summary.split(';').forEach(part => {
-        const m = part.match(/(Lunes|Martes|Mi[eé]rcoles|Jueves|Viernes|S[aá]bado|Domingo)\s*\((.*?)\)\s*-\s*\((.*?)\)/i);
-        if (m) {
-            let key = m[1].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-            if (key === 'miercoles' || DAYS.includes(key)) {
-                result[key] = { activo:true, entrada:m[2].trim(), salida:m[3].trim() };
+            to {
+                opacity: 1;
+                transform: translateY(0)
             }
         }
-    });
-    return result;
-}
 
-function getTodaySchedule() {
-    if (!empSchedule) return null;
-    const key = dayName(new Date().getDay());
-    const s = empSchedule[key];
-    return s?.activo ? s : null;
-}
+        .card {
+            background: var(--surface);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-premium);
+            overflow: hidden;
+            margin: 0 auto;
+        }
 
-function updateLateIndicator() {
-    const badge = document.getElementById('sch-status-badge');
-    if (!badge) return;
-    const s = getTodaySchedule();
-    if (!s) return;
-    const now = new Date();
-    const nowMins = now.getHours() * 60 + now.getMinutes();
-    const entryMins = toMins(s.entrada);
-    const hasEntry = todayRecords.some(r => r.tipo === 'ENTRADA');
-    if (!hasEntry && entryMins !== null && nowMins > entryMins + toleranceMins) {
-        badge.classList.add('show');
-    } else {
-        badge.classList.remove('show');
-    }
-}
+        #login-view,
+        #verify-view {
+            max-width: 420px;
+        }
 
-function toggleSchedule() {
-    const col = document.getElementById('full-sch-collapsible');
-    const btn = document.getElementById('btn-toggle-sch');
-    col.classList.toggle('show');
-    btn.classList.toggle('active');
-}
+        .login-hero {
+            padding: 42px 36px 32px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, var(--surface-alt) 0%, var(--surface) 100%);
+        }
 
-function buildScheduleUI() {
-    const el = document.getElementById('full-sch-list');
-    if (!el || !empSchedule) return;
-    const DAYS_LABELS = { lunes:'Lun', martes:'Mar', miercoles:'Mié', jueves:'Jue', viernes:'Vie', sabado:'Sáb', domingo:'Dom' };
-    const todayKey = dayName(new Date().getDay());
-    el.innerHTML = '';
-    Object.entries(DAYS_LABELS).forEach(([key, label]) => {
-        const s = empSchedule[key];
-        const div = document.createElement('div');
-        div.className = `sch-day-card${key === todayKey ? ' today' : ''}${!s?.activo ? ' inactive' : ''}`;
-        div.innerHTML = `<span class="sch-day-name">${label}</span>
+        .bolt-badge {
+            width: 54px;
+            height: 54px;
+            background: var(--yellow);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
+            box-shadow: 0 6px 20px var(--yellow-glow);
+        }
+
+        .login-title {
+            font-size: 23px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: var(--text);
+            margin-bottom: 7px;
+        }
+
+        .login-sub {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .login-body {
+            padding: 28px 36px 34px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--muted);
+        }
+
+        .field-wrap {
+            position: relative;
+        }
+
+        .field-ico {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 17px;
+            height: 17px;
+            color: #b0b7c0;
+            pointer-events: none;
+        }
+
+        .field-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px 0 43px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14.5px;
+            color: var(--text);
+            background: #fafbfc;
+            transition: border-color .18s, box-shadow .18s;
+            outline: none;
+        }
+
+        .field-input:focus {
+            border-color: var(--yellow);
+            background: #fff;
+            box-shadow: 0 0 0 4px var(--yellow-glow);
+        }
+
+        .field-input.is-error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 13px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .22s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+        }
+
+        .btn-primary {
+            background: var(--yellow);
+            color: #000;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px var(--yellow-glow);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.65;
+            pointer-events: none;
+        }
+
+        .btn-spinner,
+        .btn-card-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid rgba(0, 0, 0, 0.1);
+            border-top-color: rgba(0, 0, 0, 0.8);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            display: none;
+        }
+
+        .btn.loading .btn-spinner {
+            display: block;
+        }
+
+        .btn.loading .btn-lbl {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .global-err {
+            font-size: 13px;
+            color: var(--error);
+            background: #fff1f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            display: none;
+        }
+
+        .global-err.show {
+            display: block;
+        }
+
+        .footer-hint {
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 16px;
+        }
+
+        .verify-countdown-strip {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 18px;
+            padding: 10px 16px;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 12.5px;
+            color: var(--muted);
+        }
+
+        .verify-countdown-strip.show {
+            display: flex;
+        }
+
+        .verify-countdown-strip .vc-time {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 13.5px;
+            min-width: 32px;
+            text-align: center;
+        }
+
+        .verify-countdown-strip .vc-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            flex-shrink: 0;
+            animation: pulseDot 2s infinite;
+        }
+
+        .verify-countdown-strip.expiring .vc-dot {
+            background: var(--error);
+        }
+
+        .verify-countdown-strip.expiring .vc-time {
+            color: var(--error);
+        }
+
+        #dashboard-view {
+            max-width: 820px;
+        }
+
+        .dash-card {
+            border: 1px solid var(--border);
+            padding: 48px;
+            background: var(--surface);
+            box-shadow: var(--shadow-premium);
+            position: relative;
+        }
+
+        @media(max-width:600px) {
+            .dash-card {
+                padding: 24px 18px;
+            }
+        }
+
+        .dash-intro {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 36px;
+            gap: 20px;
+        }
+
+        @media(max-width:600px) {
+            .dash-intro {
+                flex-direction: column;
+            }
+        }
+
+        .intro-tag {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--muted);
+            letter-spacing: 0.15em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .intro-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+
+        .name-highlight {
+            color: var(--accent);
+        }
+
+        .intro-sub {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .intro-right {
+            text-align: right;
+        }
+
+        @media(max-width:600px) {
+            .intro-right {
+                text-align: left;
+            }
+        }
+
+        .dash-clock {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .dash-date {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .schedule-strip {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .sch-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sch-lbl {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .sch-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .sch-arrow {
+            color: var(--border);
+            display: flex;
+            align-items: center;
+        }
+
+        .sch-badge {
+            margin-left: auto;
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(234, 179, 8, 0.2);
+            text-transform: uppercase;
+        }
+
+        .sch-badge.show {
+            display: flex;
+        }
+
+        .btn-toggle-sch {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            margin-left: auto;
+        }
+
+        .btn-toggle-sch:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .btn-toggle-sch svg {
+            transition: transform .3s;
+        }
+
+        .btn-toggle-sch.active svg {
+            transform: rotate(180deg);
+        }
+
+        .full-sch-collapsible {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .full-sch-collapsible.show {
+            max-height: 600px;
+            margin-bottom: 28px;
+        }
+
+        .full-sch-table {
+            background: var(--surface-alt);
+            border-radius: 18px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .sch-day-card {
+            background: var(--surface);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .sch-day-card.today {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--yellow-glow);
+        }
+
+        .sch-day-card.inactive {
+            opacity: 0.45;
+        }
+
+        .sch-day-name {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .sch-day-time {
+            display: block;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .status-summary {
+            margin-bottom: 28px;
+        }
+
+        .summary-lbl {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .summary-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .status-dot.active {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: .5
+            }
+        }
+
+        .work-duration {
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .work-duration-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .work-duration-time {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--success);
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .actions-grid-premium {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 36px;
+        }
+
+        @media(max-width:500px) {
+            .actions-grid-premium {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .action-btn-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: left;
+            cursor: pointer;
+            transition: all .25s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .action-btn-card:hover:not(:disabled) {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-btn-card:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(.5);
+        }
+
+        .action-btn-card.btn-in {
+            border-left: 4px solid var(--success);
+        }
+
+        .action-btn-card.btn-out {
+            border-left: 4px solid var(--error);
+        }
+
+        .btn-card-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .status-light {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .btn-in .status-light {
+            background: #065f46;
+        }
+
+        .btn-out .status-light {
+            background: #7f1d1d;
+        }
+
+        .btn-card-title {
+            color: var(--text);
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .btn-card-desc {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .btn-card-spinner {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+        }
+
+        .action-btn-card.loading .btn-card-spinner {
+            display: block;
+        }
+
+        .recent-history {
+            margin-top: 8px;
+        }
+
+        .history-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--muted);
+            letter-spacing: 0.12em;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+
+        .history-scroll {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .history-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .history-scroll::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            gap: 12px;
+        }
+
+        .hi-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hi-date {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .hi-time {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .hi-msg {
+            font-size: 11px;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .hi-type-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .hi-type-badge.in {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .hi-type-badge.out {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .dash-footer {
+            padding-top: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-logout {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all .2s;
+        }
+
+        .btn-logout:hover {
+            color: var(--error);
+            background: #fff1f2;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(16px);
+            background: #111827;
+            color: #fff;
+            padding: 11px 22px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+            z-index: 9999;
+            opacity: 0;
+            transition: all .38s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.ok {
+            background: #14532d;
+        }
+
+        .toast.err {
+            background: #7f1d1d;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 900;
+            background: var(--bg);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner-ring {
+            width: 52px;
+            height: 52px;
+            border: 4px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .9s linear infinite;
+        }
+
+        .loading-overlay-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all .3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--surface);
+            width: 90%;
+            max-width: 440px;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: var(--shadow-premium);
+            transform: translateY(20px) scale(.95);
+            transition: all .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid var(--border);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .modal-desc {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .just-textarea {
+            width: 100%;
+            height: 120px;
+            background: var(--surface-alt);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text);
+            resize: none;
+            transition: all .2s;
+            margin-bottom: 20px;
+            outline: none;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .just-textarea:focus {
+            border-color: var(--accent);
+            background: var(--surface);
+            box-shadow: 0 0 0 4px var(--yellow-glow);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-modal-save {
+            flex: 1;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-modal-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--yellow-glow);
+        }
+
+        .btn-modal-save.loading .btn-lbl {
+            display: none;
+        }
+
+        .btn-modal-save.loading .btn-card-spinner {
+            display: block;
+            position: static;
+        }
+
+        .btn-modal-cancel {
+            padding: 14px 20px;
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--muted);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn-modal-cancel:hover {
+            background: #ffe4e6;
+            color: var(--error);
+            border-color: #fecaca;
+        }
+
+        .verify-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 28px 0;
+        }
+
+        .code-input {
+            width: 52px;
+            height: 66px;
+            text-align: center;
+            font-size: 30px;
+            font-weight: 800;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            background: #fafbfc;
+            color: var(--text);
+            transition: all .2s;
+            outline: none;
+        }
+
+        .code-input:focus {
+            border-color: var(--yellow);
+            background: #fff;
+            box-shadow: 0 0 0 4px var(--yellow-glow);
+            transform: translateY(-3px);
+        }
+
+        .no-schedule-msg {
+            text-align: center;
+            padding: 32px 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div class="header-logo">
+            <svg class="logo-bolt" viewBox="0 0 100 200">
+                <path d="M60,10 L25,110 L50,110 L40,190 L75,90 L50,90 Z" fill="#FACC15" />
+            </svg>
+            <span class="logo-wordmark">RAYOAPP</span>
+            <span class="header-empresa" id="hdr-empresa"></span>
+        </div>
+        <div class="header-right">
+            <span class="live-clock" id="hdr-clock"></span>
+        </div>
+    </header>
+
+    <main class="page">
+
+        <!-- LOGIN -->
+        <div id="login-view" class="view active">
+            <div class="card">
+                <div class="login-hero">
+                    <div class="bolt-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round"
+                            stroke-linejoin="round" width="26" height="26">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                            <polyline points="10 17 15 12 10 7" />
+                            <line x1="15" y1="12" x2="3" y2="12" />
+                        </svg>
+                    </div>
+                    <h1 class="login-title">Acceso al portal</h1>
+                    <p class="login-sub">Ingresa con tu correo corporativo y tu número de cédula para registrar tu
+                        asistencia.</p>
+                </div>
+                <div class="login-body">
+                    <div class="global-err" id="global-err"></div>
+                    <div class="field">
+                        <label class="field-label" for="f-correo">Correo electrónico</label>
+                        <div class="field-wrap">
+                            <svg class="field-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="4" width="20" height="16" rx="2" />
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                            </svg>
+                            <input type="email" id="f-correo" class="field-input" placeholder="tu@correo.com"
+                                autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="f-cedula">Cédula de identidad</label>
+                        <div class="field-wrap">
+                            <svg class="field-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            <input type="text" id="f-cedula" class="field-input" placeholder="Ej: 12345678"
+                                inputmode="numeric">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
+                        <div class="btn-spinner"></div>
+                        <span class="btn-lbl">Ingresar al portal</span>
+                    </button>
+                    <p class="footer-hint">¿Problemas para ingresar? Contacta a tu supervisor.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2FA -->
+        <div id="verify-view" class="view">
+            <div class="card">
+                <div class="login-hero">
+                    <div class="bolt-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round"
+                            stroke-linejoin="round" width="26" height="26">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <h1 class="login-title">Paso de seguridad</h1>
+                    <p class="login-sub">Ingresa el código de 5 dígitos que puedes ver en la aplicación de tu
+                        supervisor.</p>
+                </div>
+                <div class="login-body">
+                    <div class="global-err" id="verify-err"></div>
+                    <div class="verify-inputs" id="code-inputs-container">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="0">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="1">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="2">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="3">
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-idx="4">
+                    </div>
+                    <button class="btn btn-primary" id="verify-btn" onclick="doVerifyCode()">
+                        <div class="btn-spinner"></div>
+                        <span class="btn-lbl">Verificar y continuar</span>
+                    </button>
+                    <button class="btn-logout" onclick="stopVerifyCountdown();showView('login-view')"
+                        style="margin-top:14px;width:100%;justify-content:center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                        Volver al inicio
+                    </button>
+                    <div class="verify-countdown-strip" id="verify-countdown-strip">
+                        <span class="vc-dot"></span>
+                        <span>Código se renueva en</span>
+                        <span class="vc-time" id="verify-countdown-time">-:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOADING -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-spinner-ring"></div>
+            <p class="loading-overlay-text">Cargando tu información…</p>
+        </div>
+
+        <!-- AUTO CHECKIN — activado con ?empresa=X&email=Y desde Trinity -->
+        <div id="auto-view" class="view" style="max-width:440px;margin:0 auto;width:100%">
+            <div class="card">
+                <div class="login-hero">
+                    <div class="bolt-badge" id="auto-badge">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h1 class="login-title" id="auto-title">Verificando asistencia…</h1>
+                    <p class="login-sub" id="auto-sub" style="display:none"></p>
+                </div>
+                <div class="login-body" id="auto-body">
+                    <div style="display:flex;justify-content:center;padding:8px 0">
+                        <div class="loading-spinner-ring" style="border-top-color:var(--accent)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard-view" class="view">
+            <div class="card dash-card">
+                <div class="dash-intro">
+                    <div class="intro-left">
+                        <span class="intro-tag">PANEL DE ASISTENCIA</span>
+                        <h2 class="intro-title">Hola, <span id="emp-nombre-dash" class="name-highlight">Empleado</span>
+                        </h2>
+                        <p class="intro-sub">Cédula: <span id="emp-cedula-dash">---</span> · <span
+                                id="emp-area-dash">---</span></p>
+                    </div>
+                    <div class="intro-right">
+                        <div id="emp-clock" class="dash-clock">00:00:00</div>
+                        <div id="emp-date" class="dash-date">---</div>
+                    </div>
+                </div>
+
+                <div class="schedule-strip">
+                    <div class="sch-item">
+                        <span class="sch-lbl">ENTRADA PROGRAMADA</span>
+                        <span class="sch-val" id="sch-in">--:--</span>
+                    </div>
+                    <div class="sch-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                    <div class="sch-item">
+                        <span class="sch-lbl">SALIDA PROGRAMADA</span>
+                        <span class="sch-val" id="sch-out">--:--</span>
+                    </div>
+                    <div class="sch-badge" id="sch-status-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01" />
+                        </svg>
+                        <span>Tarde</span>
+                    </div>
+                    <button class="btn-toggle-sch" id="btn-toggle-sch" onclick="toggleSchedule()">
+                        <span>Horario completo</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="full-sch-collapsible" class="full-sch-collapsible">
+                    <div class="full-sch-table" id="full-sch-list"></div>
+                </div>
+
+                <div class="status-summary">
+                    <span class="summary-lbl">Estado actual</span>
+                    <div class="summary-box">
+                        <div class="status-dot" id="status-dot-dash"></div>
+                        <span id="status-lbl-dash">Sin registros hoy</span>
+                        <div id="work-duration-dash" class="work-duration" style="display:none">
+                            <span class="work-duration-label">Tiempo trabajado</span>
+                            <span class="work-duration-time" id="work-duration-val">00:00:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions-grid-premium">
+                    <button class="action-btn-card btn-in" id="btn-in-dash" onclick="doCheckIn()">
+                        <div class="btn-card-spinner"></div>
+                        <div class="btn-card-top">
+                            <div class="status-light"></div>
+                            <span class="btn-card-title">Registrar Entrada</span>
+                        </div>
+                        <span class="btn-card-desc" id="btn-in-desc">Marca tu llegada</span>
+                    </button>
+                    <button class="action-btn-card btn-out" id="btn-out-dash" onclick="doCheckOut()">
+                        <div class="btn-card-spinner"></div>
+                        <div class="btn-card-top">
+                            <div class="status-light"></div>
+                            <span class="btn-card-title">Registrar Salida</span>
+                        </div>
+                        <span class="btn-card-desc" id="btn-out-desc">Marca tu partida</span>
+                    </button>
+                </div>
+
+                <div class="recent-history">
+                    <h3 class="history-title">Registros recientes</h3>
+                    <div class="history-scroll" id="history-scroll-dash"></div>
+                </div>
+
+                <div class="dash-footer">
+                    <button class="btn-logout" onclick="doLogout()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- Modal Justificación -->
+    <div class="modal-overlay" id="modal-just">
+        <div class="modal-card">
+            <div class="modal-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Justificar Registro
+            </div>
+            <p class="modal-desc" id="modal-just-desc">Tu registro está fuera del horario habitual. Indica el motivo.
+            </p>
+            <textarea class="just-textarea" id="txt-just" placeholder="Escribe tu justificación aquí..."></textarea>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" onclick="closeJustModal()">Cancelar</button>
+                <button class="btn-modal-save" id="btn-save-just">
+                    <div class="btn-card-spinner"></div>
+                    <span class="btn-lbl">Guardar Registro</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─────────────────────────────────────────────
+        // CONFIG
+        // ─────────────────────────────────────────────
+        const TURSO_URL = 'https://rayoapp-db-rossswell.aws-us-west-2.turso.io/v2/pipeline';
+        const TURSO_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Nzg5NTE2ODQsImlkIjoiMDE5ZTMxYzgtNmIwMS03ZTgyLTk2ZDUtOWIwZWUwZDNlN2U4IiwicmlkIjoiNjUzZTY5OGMtODZkMS00YjhhLWIzOWMtNmYzZTcyMmQwMjk3In0.5VD8bvwdvOuOKMDz8y3gZFE0L5dxNukuwqyz3sl4LbRjFHS0oY-rt5LF3cumY3wlR1nkzcA5nJ6oGN1UcltzAQ';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const EMPRESA = urlParams.get('empresa') || 'flash_high';
+        const EMPRESA_LABELS = { flash_high: 'Flash High', mmx: 'MMX', activo_motors: 'Activo Motors' };
+        document.getElementById('hdr-empresa').textContent = EMPRESA_LABELS[EMPRESA] || EMPRESA;
+
+        // State
+        let currentEmp = null;
+        let empSchedule = null;
+        let toleranceMins = 0;
+        let todayRecords = [];
+        let isProcessing = false;
+        let justifCallback = null;
+        let workTimer = null;
+
+        // ─────────────────────────────────────────────
+        // TURSO
+        // ─────────────────────────────────────────────
+        function toTursoArg(v) {
+            if (v === null || v === undefined) return { type: 'null' };
+            if (typeof v === 'number') return Number.isInteger(v) ? { type: 'integer', value: String(v) } : { type: 'float', value: String(v) };
+            return { type: 'text', value: String(v) };
+        }
+
+        async function tursoQuery(sql, args = []) {
+            const res = await fetch(TURSO_URL, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${TURSO_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requests: [
+                        { type: 'execute', stmt: { sql, args: args.map(toTursoArg) } },
+                        { type: 'close' }
+                    ]
+                })
+            });
+            const data = await res.json();
+            if (data.results?.[0]?.type === 'error') throw new Error(data.results[0].error.message);
+            const result = data.results[0].response?.result;
+            if (!result) return [];
+            return result.rows.map(row => Object.fromEntries(result.cols.map((c, i) => [c.name, row[i]?.value ?? null])));
+        }
+
+        // ─────────────────────────────────────────────
+        // UTILS
+        // ─────────────────────────────────────────────
+        function toMins(str) {
+            if (!str) return null;
+            const m = str.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i);
+            if (!m) return null;
+            let h = parseInt(m[1]), mins = parseInt(m[2]), ampm = m[3].toLowerCase();
+            if (ampm === 'pm' && h < 12) h += 12;
+            if (ampm === 'am' && h === 12) h = 0;
+            return h * 60 + mins;
+        }
+
+        function minsToDisplay(m) {
+            const h = Math.floor(m / 60), min = m % 60;
+            const ampm = h >= 12 ? 'pm' : 'am';
+            const h12 = h % 12 || 12;
+            return `${h12}:${String(min).padStart(2, '0')} ${ampm}`;
+        }
+
+        function getWeekNumber(d) {
+            const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+            return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function formatDate(d) {
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        function formatTime(d) {
+            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+        }
+
+        function dayName(jsDay) {
+            return ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'][jsDay];
+        }
+
+        function showView(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(id)?.classList.add('active');
+        }
+
+        function showToast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type}`;
+            requestAnimationFrame(() => { t.classList.add('show'); });
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        function setLoading(el, on) {
+            if (!el) return;
+            on ? el.classList.add('loading') : el.classList.remove('loading');
+            if (el.tagName === 'BUTTON') el.disabled = on;
+        }
+
+        // ─────────────────────────────────────────────
+        // CLOCK
+        // ─────────────────────────────────────────────
+        function updateClock() {
+            const now = new Date();
+            const timeStr = formatTime(now);
+            const dateOpts = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
+            const dateStr = now.toLocaleDateString('es-VE', dateOpts).toUpperCase();
+            const el = document.getElementById('hdr-clock');
+            const ec = document.getElementById('emp-clock');
+            const ed = document.getElementById('emp-date');
+            if (el) el.textContent = timeStr;
+            if (ec) ec.textContent = timeStr;
+            if (ed) ed.textContent = dateStr;
+            updateLateIndicator();
+            updateWorkDuration();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // ─────────────────────────────────────────────
+        // SCHEDULE
+        // ─────────────────────────────────────────────
+        function parseScheduleSummary(summary) {
+            if (!summary || summary === 'No asignado') return null;
+            const DAYS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+            const result = {};
+            DAYS.forEach(d => result[d] = { activo: false });
+            summary.split(';').forEach(part => {
+                const m = part.match(/(Lunes|Martes|Mi[eé]rcoles|Jueves|Viernes|S[aá]bado|Domingo)\s*\((.*?)\)\s*-\s*\((.*?)\)/i);
+                if (m) {
+                    let key = m[1].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+                    if (key === 'miercoles' || DAYS.includes(key)) {
+                        result[key] = { activo: true, entrada: m[2].trim(), salida: m[3].trim() };
+                    }
+                }
+            });
+            return result;
+        }
+
+        function getTodaySchedule() {
+            if (!empSchedule) return null;
+            const key = dayName(new Date().getDay());
+            const s = empSchedule[key];
+            return s?.activo ? s : null;
+        }
+
+        function updateLateIndicator() {
+            const badge = document.getElementById('sch-status-badge');
+            if (!badge) return;
+            const s = getTodaySchedule();
+            if (!s) return;
+            const now = new Date();
+            const nowMins = now.getHours() * 60 + now.getMinutes();
+            const entryMins = toMins(s.entrada);
+            const hasEntry = todayRecords.some(r => r.tipo === 'ENTRADA');
+            if (!hasEntry && entryMins !== null && nowMins > entryMins + toleranceMins) {
+                badge.classList.add('show');
+            } else {
+                badge.classList.remove('show');
+            }
+        }
+
+        function toggleSchedule() {
+            const col = document.getElementById('full-sch-collapsible');
+            const btn = document.getElementById('btn-toggle-sch');
+            col.classList.toggle('show');
+            btn.classList.toggle('active');
+        }
+
+        function buildScheduleUI() {
+            const el = document.getElementById('full-sch-list');
+            if (!el || !empSchedule) return;
+            const DAYS_LABELS = { lunes: 'Lun', martes: 'Mar', miercoles: 'Mié', jueves: 'Jue', viernes: 'Vie', sabado: 'Sáb', domingo: 'Dom' };
+            const todayKey = dayName(new Date().getDay());
+            el.innerHTML = '';
+            Object.entries(DAYS_LABELS).forEach(([key, label]) => {
+                const s = empSchedule[key];
+                const div = document.createElement('div');
+                div.className = `sch-day-card${key === todayKey ? ' today' : ''}${!s?.activo ? ' inactive' : ''}`;
+                div.innerHTML = `<span class="sch-day-name">${label}</span>
             <span class="sch-day-time">${s?.activo ? `${s.entrada}\n${s.salida}` : 'Libre'}</span>`;
-        el.appendChild(div);
-    });
-    // Today's hours in strip
-    const t = getTodaySchedule();
-    document.getElementById('sch-in').textContent  = t ? t.entrada : '--:--';
-    document.getElementById('sch-out').textContent = t ? t.salida  : '--:--';
-}
+                el.appendChild(div);
+            });
+            // Today's hours in strip
+            const t = getTodaySchedule();
+            document.getElementById('sch-in').textContent = t ? t.entrada : '--:--';
+            document.getElementById('sch-out').textContent = t ? t.salida : '--:--';
+        }
 
-// ─────────────────────────────────────────────
-// LOGIN
-// ─────────────────────────────────────────────
-async function doLogin() {
-    const correo = document.getElementById('f-correo').value.trim();
-    const cedula = document.getElementById('f-cedula').value.trim();
-    const errEl  = document.getElementById('global-err');
-    const btn    = document.getElementById('login-btn');
-    errEl.classList.remove('show');
+        // ─────────────────────────────────────────────
+        // LOGIN
+        // ─────────────────────────────────────────────
+        async function doLogin() {
+            const correo = document.getElementById('f-correo').value.trim();
+            const cedula = document.getElementById('f-cedula').value.trim();
+            const errEl = document.getElementById('global-err');
+            const btn = document.getElementById('login-btn');
+            errEl.classList.remove('show');
 
-    if (!correo || !cedula) {
-        errEl.textContent = 'Completa todos los campos.';
-        errEl.classList.add('show');
-        return;
-    }
-    setLoading(btn, true);
-    try {
-        const rows = await tursoQuery(
-            'SELECT * FROM empleados WHERE empresa=? AND correo=? AND cedula=?',
-            [EMPRESA, correo, cedula]
-        );
-        if (!rows.length) {
-            errEl.textContent = 'Datos incorrectos. Verifica tu correo y cédula.';
-            errEl.classList.add('show');
+            if (!correo || !cedula) {
+                errEl.textContent = 'Completa todos los campos.';
+                errEl.classList.add('show');
+                return;
+            }
+            setLoading(btn, true);
+            try {
+                const rows = await tursoQuery(
+                    'SELECT * FROM empleados WHERE empresa=? AND correo=? AND cedula=?',
+                    [EMPRESA, correo, cedula]
+                );
+                if (!rows.length) {
+                    errEl.textContent = 'Datos incorrectos. Verifica tu correo y cédula.';
+                    errEl.classList.add('show');
+                    setLoading(btn, false);
+                    return;
+                }
+                currentEmp = rows[0];
+
+                // Mostrar vista de verificación
+                document.querySelectorAll('.code-input').forEach(i => i.value = '');
+                showView('verify-view');
+                document.querySelector('.code-input')?.focus();
+                showToast('Autenticado. Pide el código a tu supervisor.', '');
+                startVerifyCountdown();
+            } catch (e) {
+                errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+                errEl.classList.add('show');
+            }
             setLoading(btn, false);
-            return;
         }
-        currentEmp = rows[0];
 
-        // Mostrar vista de verificación
-        document.querySelectorAll('.code-input').forEach(i => i.value = '');
-        showView('verify-view');
-        document.querySelector('.code-input')?.focus();
-        showToast('Autenticado. Pide el código a tu supervisor.', '');
-        startVerifyCountdown();
-    } catch(e) {
-        errEl.textContent = 'Error de conexión. Intenta de nuevo.';
-        errEl.classList.add('show');
-    }
-    setLoading(btn, false);
-}
+        // ─────────────────────────────────────────────
+        // 2FA — navegación entre cajas
+        // ─────────────────────────────────────────────
+        document.querySelectorAll('.code-input').forEach((inp, idx, all) => {
+            inp.addEventListener('input', () => {
+                inp.value = inp.value.replace(/\D/g, '').slice(-1);
+                if (inp.value && idx < all.length - 1) all[idx + 1].focus();
+            });
+            inp.addEventListener('keydown', e => {
+                if (e.key === 'Backspace' && !inp.value && idx > 0) all[idx - 1].focus();
+                if (e.key === 'Enter') doVerifyCode();
+            });
+            inp.addEventListener('paste', e => {
+                const txt = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                [...txt].forEach((c, i) => { if (all[idx + i]) all[idx + i].value = c; });
+                e.preventDefault();
+                const next = all[Math.min(idx + txt.length, all.length - 1)];
+                next?.focus();
+            });
+        });
 
-// ─────────────────────────────────────────────
-// 2FA — navegación entre cajas
-// ─────────────────────────────────────────────
-document.querySelectorAll('.code-input').forEach((inp, idx, all) => {
-    inp.addEventListener('input', () => {
-        inp.value = inp.value.replace(/\D/g,'').slice(-1);
-        if (inp.value && idx < all.length - 1) all[idx+1].focus();
-    });
-    inp.addEventListener('keydown', e => {
-        if (e.key === 'Backspace' && !inp.value && idx > 0) all[idx-1].focus();
-        if (e.key === 'Enter') doVerifyCode();
-    });
-    inp.addEventListener('paste', e => {
-        const txt = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
-        [...txt].forEach((c, i) => { if (all[idx+i]) all[idx+i].value = c; });
-        e.preventDefault();
-        const next = all[Math.min(idx + txt.length, all.length-1)];
-        next?.focus();
-    });
-});
+        async function doVerifyCode() {
+            const inputs = document.querySelectorAll('.code-input');
+            const code = [...inputs].map(i => i.value).join('');
+            const errEl = document.getElementById('verify-err');
+            const btn = document.getElementById('verify-btn');
+            errEl.classList.remove('show');
 
-async function doVerifyCode() {
-    const inputs = document.querySelectorAll('.code-input');
-    const code = [...inputs].map(i => i.value).join('');
-    const errEl = document.getElementById('verify-err');
-    const btn   = document.getElementById('verify-btn');
-    errEl.classList.remove('show');
+            if (code.length < 5) {
+                errEl.textContent = 'Ingresa los 5 dígitos del código.';
+                errEl.classList.add('show');
+                return;
+            }
+            setLoading(btn, true);
+            try {
+                // Verificar contra el código activo de la empresa
+                const rows = await tursoQuery(
+                    "SELECT codigo, expires_at FROM codigos_empresa WHERE empresa=? AND expires_at > datetime('now')",
+                    [EMPRESA]
+                );
 
-    if (code.length < 5) {
-        errEl.textContent = 'Ingresa los 5 dígitos del código.';
-        errEl.classList.add('show');
-        return;
-    }
-    setLoading(btn, true);
-    try {
-        // Verificar contra el código activo de la empresa
-        const rows = await tursoQuery(
-            "SELECT codigo, expires_at FROM codigos_empresa WHERE empresa=? AND expires_at > datetime('now')",
-            [EMPRESA]
-        );
+                if (!rows.length) {
+                    errEl.textContent = 'No hay código activo. Pide a tu supervisor que abra la aplicación.';
+                    errEl.classList.add('show');
+                    setLoading(btn, false);
+                    return;
+                }
 
-        if (!rows.length) {
-            errEl.textContent = 'No hay código activo. Pide a tu supervisor que abra la aplicación.';
-            errEl.classList.add('show');
+                if (rows[0].codigo !== code) {
+                    errEl.textContent = 'Código incorrecto. Verifica con tu supervisor.';
+                    errEl.classList.add('show');
+                    setLoading(btn, false);
+                    return;
+                }
+
+                // Código correcto — continuar (no se invalida, múltiples empleados pueden usarlo)
+                stopVerifyCountdown();
+                // Cargar horario
+                const schRows = await tursoQuery(
+                    'SELECT * FROM horarios WHERE empresa=? AND cedula=?',
+                    [EMPRESA, currentEmp.cedula]
+                );
+                if (schRows.length) {
+                    empSchedule = parseScheduleSummary(schRows[0].schedule_summary);
+                    toleranceMins = parseInt(schRows[0].tolerance) || 0;
+                }
+                document.getElementById('loading-overlay').classList.add('active');
+                await loadDashboard();
+                document.getElementById('loading-overlay').classList.remove('active');
+                showView('dashboard-view');
+            } catch (e) {
+                errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+                errEl.classList.add('show');
+            }
             setLoading(btn, false);
-            return;
         }
 
-        if (rows[0].codigo !== code) {
-            errEl.textContent = 'Código incorrecto. Verifica con tu supervisor.';
-            errEl.classList.add('show');
-            setLoading(btn, false);
-            return;
-        }
+        // ─────────────────────────────────────────────
+        // VERIFY COUNTDOWN
+        // ─────────────────────────────────────────────
+        let verifyCountdownTimer = null;
 
-        // Código correcto — continuar (no se invalida, múltiples empleados pueden usarlo)
-        stopVerifyCountdown();
-        // Cargar horario
-        const schRows = await tursoQuery(
-            'SELECT * FROM horarios WHERE empresa=? AND cedula=?',
-            [EMPRESA, currentEmp.cedula]
-        );
-        if (schRows.length) {
-            empSchedule   = parseScheduleSummary(schRows[0].schedule_summary);
-            toleranceMins = parseInt(schRows[0].tolerance) || 0;
-        }
-        document.getElementById('loading-overlay').classList.add('active');
-        await loadDashboard();
-        document.getElementById('loading-overlay').classList.remove('active');
-        showView('dashboard-view');
-    } catch(e) {
-        errEl.textContent = 'Error de conexión. Intenta de nuevo.';
-        errEl.classList.add('show');
-    }
-    setLoading(btn, false);
-}
-
-// ─────────────────────────────────────────────
-// VERIFY COUNTDOWN
-// ─────────────────────────────────────────────
-let verifyCountdownTimer = null;
-
-function stopVerifyCountdown() {
-    clearInterval(verifyCountdownTimer);
-    verifyCountdownTimer = null;
-    const strip = document.getElementById('verify-countdown-strip');
-    if (strip) { strip.classList.remove('show', 'expiring'); }
-}
-
-async function startVerifyCountdown() {
-    stopVerifyCountdown();
-    const strip  = document.getElementById('verify-countdown-strip');
-    const timeEl = document.getElementById('verify-countdown-time');
-
-    // Solo trae códigos que AÚN NO han expirado
-    async function fetchAndSync() {
-        try {
-            const rows = await tursoQuery(
-                "SELECT expires_at FROM codigos_empresa WHERE empresa=? AND expires_at > datetime('now')",
-                [EMPRESA]
-            );
-            if (!rows.length || !rows[0].expires_at) return null;
-            const exp = String(rows[0].expires_at).replace(' ', 'T') + 'Z';
-            const ts = new Date(exp).getTime();
-            // Verificar que sea realmente en el futuro (por si acá el timezone difiere)
-            return ts > Date.now() ? ts : null;
-        } catch { return null; }
-    }
-
-    let expiresAt = await fetchAndSync();
-    if (!expiresAt) { strip.classList.remove('show'); return; }
-
-    strip.classList.add('show');
-    let expired = false;
-
-    function tick() {
-        if (expired) return;
-        const secsLeft = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
-        const m = Math.floor(secsLeft / 60);
-        const s = secsLeft % 60;
-        timeEl.textContent = `${m}:${String(s).padStart(2,'0')}`;
-        strip.classList.toggle('expiring', secsLeft <= 10);
-
-        if (secsLeft === 0) {
-            expired = true;
+        function stopVerifyCountdown() {
             clearInterval(verifyCountdownTimer);
             verifyCountdownTimer = null;
-
-            document.querySelectorAll('.code-input').forEach(i => i.value = '');
-            document.querySelector('.code-input')?.focus();
-            const errEl = document.getElementById('verify-err');
-            errEl.textContent = 'El código se renovó. Pide el nuevo a tu supervisor.';
-            errEl.classList.add('show');
-            strip.classList.remove('show', 'expiring');
-
-            // Esperar a que el supervisor genere el nuevo código (polling cada 5s, max 2 min)
-            let attempts = 0;
-            const maxAttempts = 24;
-            const poll = setInterval(async () => {
-                attempts++;
-                const newExpiry = await fetchAndSync();
-                if (newExpiry) {
-                    clearInterval(poll);
-                    errEl.classList.remove('show');
-                    expiresAt = newExpiry;
-                    expired = false;
-                    strip.classList.add('show');
-                    verifyCountdownTimer = setInterval(tick, 1000);
-                    tick();
-                } else if (attempts >= maxAttempts) {
-                    clearInterval(poll);
-                }
-            }, 5000);
+            const strip = document.getElementById('verify-countdown-strip');
+            if (strip) { strip.classList.remove('show', 'expiring'); }
         }
-    }
 
-    tick();
-    verifyCountdownTimer = setInterval(tick, 1000);
-}
+        async function startVerifyCountdown() {
+            stopVerifyCountdown();
+            const strip = document.getElementById('verify-countdown-strip');
+            const timeEl = document.getElementById('verify-countdown-time');
 
-// ─────────────────────────────────────────────
-// DASHBOARD
-// ─────────────────────────────────────────────
-async function loadDashboard() {
-    document.getElementById('emp-nombre-dash').textContent = currentEmp.nombre?.split(' ')[0] || 'Empleado';
-    document.getElementById('emp-cedula-dash').textContent = currentEmp.cedula;
-    document.getElementById('emp-area-dash').textContent   = currentEmp.area || '';
-    buildScheduleUI();
-    await loadTodayRecords();
-    renderHistory();
-    updateStatusUI();
-}
+            // Solo trae códigos que AÚN NO han expirado
+            async function fetchAndSync() {
+                try {
+                    const rows = await tursoQuery(
+                        "SELECT expires_at FROM codigos_empresa WHERE empresa=? AND expires_at > datetime('now')",
+                        [EMPRESA]
+                    );
+                    if (!rows.length || !rows[0].expires_at) return null;
+                    const exp = String(rows[0].expires_at).replace(' ', 'T') + 'Z';
+                    const ts = new Date(exp).getTime();
+                    // Verificar que sea realmente en el futuro (por si acá el timezone difiere)
+                    return ts > Date.now() ? ts : null;
+                } catch { return null; }
+            }
 
-async function loadTodayRecords() {
-    const today = formatDate(new Date());
-    todayRecords = await tursoQuery(
-        'SELECT * FROM asistencias WHERE empresa=? AND cedula=? AND fecha=? ORDER BY id ASC',
-        [EMPRESA, currentEmp.cedula, today]
-    );
-}
+            let expiresAt = await fetchAndSync();
+            if (!expiresAt) { strip.classList.remove('show'); return; }
 
-function updateStatusUI() {
-    const dot  = document.getElementById('status-dot-dash');
-    const lbl  = document.getElementById('status-lbl-dash');
-    const wdiv = document.getElementById('work-duration-dash');
-    const hasIn  = todayRecords.some(r => r.tipo === 'ENTRADA');
-    const hasOut = todayRecords.some(r => r.tipo === 'SALIDA');
-    const btnIn  = document.getElementById('btn-in-dash');
-    const btnOut = document.getElementById('btn-out-dash');
-    const descIn  = document.getElementById('btn-in-desc');
-    const descOut = document.getElementById('btn-out-desc');
+            strip.classList.add('show');
+            let expired = false;
 
-    if (!hasIn && !hasOut) {
-        dot.className = 'status-dot'; lbl.textContent = 'Sin registros hoy';
-        wdiv.style.display = 'none';
-        btnIn.disabled = false; descIn.textContent = 'Marca tu llegada';
-        btnOut.disabled = true; descOut.textContent = 'Primero registra entrada';
-    } else if (hasIn && !hasOut) {
-        dot.className = 'status-dot active'; lbl.textContent = 'Jornada en curso';
-        wdiv.style.display = 'flex';
-        btnIn.disabled = true; descIn.textContent = 'Entrada ya registrada';
-        btnOut.disabled = false; descOut.textContent = 'Marca tu partida';
-        startWorkTimer();
-    } else {
-        dot.className = 'status-dot'; lbl.textContent = 'Jornada completada';
-        wdiv.style.display = 'flex'; stopWorkTimer();
-        btnIn.disabled = true; descIn.textContent = 'Entrada ya registrada';
-        btnOut.disabled = true; descOut.textContent = 'Salida ya registrada';
-    }
-    updateLateIndicator();
-}
+            function tick() {
+                if (expired) return;
+                const secsLeft = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+                const m = Math.floor(secsLeft / 60);
+                const s = secsLeft % 60;
+                timeEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
+                strip.classList.toggle('expiring', secsLeft <= 10);
 
-function startWorkTimer() {
-    stopWorkTimer();
-    const entry = todayRecords.find(r => r.tipo === 'ENTRADA');
-    if (!entry) return;
-    function tick() {
-        const [hh,mm,ss] = entry.hora.split(':').map(Number);
-        const entryDate = new Date(); entryDate.setHours(hh,mm,ss,0);
-        const diff = Math.max(0, Math.floor((Date.now() - entryDate.getTime()) / 1000));
-        const h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60), s = diff%60;
-        const el = document.getElementById('work-duration-val');
-        if (el) el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    }
-    tick();
-    workTimer = setInterval(tick, 1000);
-}
-function stopWorkTimer() { clearInterval(workTimer); workTimer = null; }
-function updateWorkDuration() { /* handled by startWorkTimer */ }
+                if (secsLeft === 0) {
+                    expired = true;
+                    clearInterval(verifyCountdownTimer);
+                    verifyCountdownTimer = null;
 
-function renderHistory() {
-    const el = document.getElementById('history-scroll-dash');
-    if (!el) return;
-    // Load last 20 records
-    tursoQuery(
-        'SELECT * FROM asistencias WHERE empresa=? AND cedula=? ORDER BY id DESC LIMIT 20',
-        [EMPRESA, currentEmp.cedula]
-    ).then(rows => {
-        el.innerHTML = rows.length ? '' : '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">Sin registros anteriores.</p>';
-        rows.forEach(r => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            div.innerHTML = `
+                    document.querySelectorAll('.code-input').forEach(i => i.value = '');
+                    document.querySelector('.code-input')?.focus();
+                    const errEl = document.getElementById('verify-err');
+                    errEl.textContent = 'El código se renovó. Pide el nuevo a tu supervisor.';
+                    errEl.classList.add('show');
+                    strip.classList.remove('show', 'expiring');
+
+                    // Esperar a que el supervisor genere el nuevo código (polling cada 5s, max 2 min)
+                    let attempts = 0;
+                    const maxAttempts = 24;
+                    const poll = setInterval(async () => {
+                        attempts++;
+                        const newExpiry = await fetchAndSync();
+                        if (newExpiry) {
+                            clearInterval(poll);
+                            errEl.classList.remove('show');
+                            expiresAt = newExpiry;
+                            expired = false;
+                            strip.classList.add('show');
+                            verifyCountdownTimer = setInterval(tick, 1000);
+                            tick();
+                        } else if (attempts >= maxAttempts) {
+                            clearInterval(poll);
+                        }
+                    }, 5000);
+                }
+            }
+
+            tick();
+            verifyCountdownTimer = setInterval(tick, 1000);
+        }
+
+        // ─────────────────────────────────────────────
+        // DASHBOARD
+        // ─────────────────────────────────────────────
+        async function loadDashboard() {
+            document.getElementById('emp-nombre-dash').textContent = currentEmp.nombre?.split(' ')[0] || 'Empleado';
+            document.getElementById('emp-cedula-dash').textContent = currentEmp.cedula;
+            document.getElementById('emp-area-dash').textContent = currentEmp.area || '';
+            buildScheduleUI();
+            await loadTodayRecords();
+            renderHistory();
+            updateStatusUI();
+        }
+
+        async function loadTodayRecords() {
+            const today = formatDate(new Date());
+            todayRecords = await tursoQuery(
+                'SELECT * FROM asistencias WHERE empresa=? AND cedula=? AND fecha=? ORDER BY id ASC',
+                [EMPRESA, currentEmp.cedula, today]
+            );
+        }
+
+        function updateStatusUI() {
+            const dot = document.getElementById('status-dot-dash');
+            const lbl = document.getElementById('status-lbl-dash');
+            const wdiv = document.getElementById('work-duration-dash');
+            const hasIn = todayRecords.some(r => r.tipo === 'ENTRADA');
+            const hasOut = todayRecords.some(r => r.tipo === 'SALIDA');
+            const btnIn = document.getElementById('btn-in-dash');
+            const btnOut = document.getElementById('btn-out-dash');
+            const descIn = document.getElementById('btn-in-desc');
+            const descOut = document.getElementById('btn-out-desc');
+
+            if (!hasIn && !hasOut) {
+                dot.className = 'status-dot'; lbl.textContent = 'Sin registros hoy';
+                wdiv.style.display = 'none';
+                btnIn.disabled = false; descIn.textContent = 'Marca tu llegada';
+                btnOut.disabled = true; descOut.textContent = 'Primero registra entrada';
+            } else if (hasIn && !hasOut) {
+                dot.className = 'status-dot active'; lbl.textContent = 'Jornada en curso';
+                wdiv.style.display = 'flex';
+                btnIn.disabled = true; descIn.textContent = 'Entrada ya registrada';
+                btnOut.disabled = false; descOut.textContent = 'Marca tu partida';
+                startWorkTimer();
+            } else {
+                dot.className = 'status-dot'; lbl.textContent = 'Jornada completada';
+                wdiv.style.display = 'flex'; stopWorkTimer();
+                btnIn.disabled = true; descIn.textContent = 'Entrada ya registrada';
+                btnOut.disabled = true; descOut.textContent = 'Salida ya registrada';
+            }
+            updateLateIndicator();
+        }
+
+        function startWorkTimer() {
+            stopWorkTimer();
+            const entry = todayRecords.find(r => r.tipo === 'ENTRADA');
+            if (!entry) return;
+            function tick() {
+                const [hh, mm, ss] = entry.hora.split(':').map(Number);
+                const entryDate = new Date(); entryDate.setHours(hh, mm, ss, 0);
+                const diff = Math.max(0, Math.floor((Date.now() - entryDate.getTime()) / 1000));
+                const h = Math.floor(diff / 3600), m = Math.floor((diff % 3600) / 60), s = diff % 60;
+                const el = document.getElementById('work-duration-val');
+                if (el) el.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+            tick();
+            workTimer = setInterval(tick, 1000);
+        }
+        function stopWorkTimer() { clearInterval(workTimer); workTimer = null; }
+        function updateWorkDuration() { /* handled by startWorkTimer */ }
+
+        function renderHistory() {
+            const el = document.getElementById('history-scroll-dash');
+            if (!el) return;
+            // Load last 20 records
+            tursoQuery(
+                'SELECT * FROM asistencias WHERE empresa=? AND cedula=? ORDER BY id DESC LIMIT 20',
+                [EMPRESA, currentEmp.cedula]
+            ).then(rows => {
+                el.innerHTML = rows.length ? '' : '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0;">Sin registros anteriores.</p>';
+                rows.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.innerHTML = `
                 <div class="hi-left">
-                    <span class="hi-date">${r.fecha} — Sem. ${r.semana?.replace('Semana ','') || '?'}</span>
+                    <span class="hi-date">${r.fecha} — Sem. ${r.semana?.replace('Semana ', '') || '?'}</span>
                     <span class="hi-time">${r.hora}</span>
                     <span class="hi-msg">${r.mensaje || ''}</span>
                 </div>
                 <span class="hi-type-badge ${r.tipo === 'ENTRADA' ? 'in' : 'out'}">${r.tipo}</span>`;
-            el.appendChild(div);
-        });
-    }).catch(() => {});
-}
+                    el.appendChild(div);
+                });
+            }).catch(() => { });
+        }
 
-// ─────────────────────────────────────────────
-// CHECK IN / OUT
-// ─────────────────────────────────────────────
-async function doCheckIn() {
-    if (isProcessing) return;
-    const s = getTodaySchedule();
-    const now = new Date();
-    const nowMins = now.getHours() * 60 + now.getMinutes();
+        // ─────────────────────────────────────────────
+        // CHECK IN / OUT
+        // ─────────────────────────────────────────────
+        async function doCheckIn() {
+            if (isProcessing) return;
+            const s = getTodaySchedule();
+            const now = new Date();
+            const nowMins = now.getHours() * 60 + now.getMinutes();
 
-    if (!s) {
-        // No schedule today — ask for justification
-        showJustModal('Hoy no tienes horario programado. ¿Deseas registrar entrada de todas formas?', async (justif) => {
-            await saveRecord('ENTRADA', { justifEntrada: justif, mensaje: '📋Entrada sin horario', minTarde: 0 });
-        });
-        return;
-    }
+            if (!s) {
+                // No schedule today — ask for justification
+                showJustModal('Hoy no tienes horario programado. ¿Deseas registrar entrada de todas formas?', async (justif) => {
+                    await saveRecord('ENTRADA', { justifEntrada: justif, mensaje: '📋Entrada sin horario', minTarde: 0 });
+                });
+                return;
+            }
 
-    const entryMins = toMins(s.entrada);
-    const lateMins  = entryMins !== null ? nowMins - entryMins : 0;
+            const entryMins = toMins(s.entrada);
+            const lateMins = entryMins !== null ? nowMins - entryMins : 0;
 
-    let mensaje, minTarde = 0, needsJustif = false;
-    if (lateMins <= 0) {
-        mensaje = '✅Entrada puntual';
-    } else if (lateMins <= toleranceMins) {
-        mensaje = '🟢Entrada tolerada';
-        minTarde = lateMins;
-    } else {
-        mensaje = '🔴Entrada tardía';
-        minTarde = lateMins;
-        needsJustif = true;
-    }
+            let mensaje, minTarde = 0, needsJustif = false;
+            if (lateMins <= 0) {
+                mensaje = '✅Entrada puntual';
+            } else if (lateMins <= toleranceMins) {
+                mensaje = '🟢Entrada tolerada';
+                minTarde = lateMins;
+            } else {
+                mensaje = '🔴Entrada tardía';
+                minTarde = lateMins;
+                needsJustif = true;
+            }
 
-    if (needsJustif) {
-        showJustModal(`Llegas ${lateMins} min tarde. Ingresa tu justificación.`, async (justif) => {
-            await saveRecord('ENTRADA', { justifEntrada: justif, mensaje, minTarde });
-        });
-    } else {
-        await saveRecord('ENTRADA', { justifEntrada: '', mensaje, minTarde });
-    }
-}
+            if (needsJustif) {
+                showJustModal(`Llegas ${lateMins} min tarde. Ingresa tu justificación.`, async (justif) => {
+                    await saveRecord('ENTRADA', { justifEntrada: justif, mensaje, minTarde });
+                });
+            } else {
+                await saveRecord('ENTRADA', { justifEntrada: '', mensaje, minTarde });
+            }
+        }
 
-async function doCheckOut() {
-    if (isProcessing) return;
-    const s = getTodaySchedule();
-    const now = new Date();
-    const nowMins = now.getHours() * 60 + now.getMinutes();
+        async function doCheckOut() {
+            if (isProcessing) return;
+            const s = getTodaySchedule();
+            const now = new Date();
+            const nowMins = now.getHours() * 60 + now.getMinutes();
 
-    if (!s) {
-        showJustModal('Hoy no tienes horario programado. ¿Deseas registrar salida de todas formas?', async (justif) => {
-            await saveRecord('SALIDA', { justifSalidaAnticipada: '', justifSalidaTardia: justif, mensaje: '📋Salida sin horario' });
-        });
-        return;
-    }
+            if (!s) {
+                showJustModal('Hoy no tienes horario programado. ¿Deseas registrar salida de todas formas?', async (justif) => {
+                    await saveRecord('SALIDA', { justifSalidaAnticipada: '', justifSalidaTardia: justif, mensaje: '📋Salida sin horario' });
+                });
+                return;
+            }
 
-    const exitMins = toMins(s.salida);
-    const diff = exitMins !== null ? nowMins - exitMins : 0; // positive = late, negative = early
+            const exitMins = toMins(s.salida);
+            const diff = exitMins !== null ? nowMins - exitMins : 0; // positive = late, negative = early
 
-    let mensaje, needsJustif = false, justifKey = '';
-    if (exitMins === null || Math.abs(diff) <= toleranceMins) {
-        mensaje = diff <= 0 ? '🔵Salida puntual' : '🟠Salida tolerada';
-    } else if (diff < 0) {
-        mensaje = '⚡️Salida anticipada';
-        needsJustif = true;
-        justifKey = 'justifSalidaAnticipada';
-    } else if (diff > 60) {
-        mensaje = '⚠Salida fuera de horario';
-        needsJustif = true;
-        justifKey = 'justifSalidaTardia';
-    } else {
-        mensaje = '🟠Salida tolerada';
-    }
+            let mensaje, needsJustif = false, justifKey = '';
+            if (exitMins === null || Math.abs(diff) <= toleranceMins) {
+                mensaje = diff <= 0 ? '🔵Salida puntual' : '🟠Salida tolerada';
+            } else if (diff < 0) {
+                mensaje = '⚡️Salida anticipada';
+                needsJustif = true;
+                justifKey = 'justifSalidaAnticipada';
+            } else if (diff > 60) {
+                mensaje = '⚠Salida fuera de horario';
+                needsJustif = true;
+                justifKey = 'justifSalidaTardia';
+            } else {
+                mensaje = '🟠Salida tolerada';
+            }
 
-    if (needsJustif) {
-        const desc = diff < 0
-            ? `Sales ${Math.abs(diff)} min antes del horario previsto.`
-            : `Sales ${diff} min después del horario previsto.`;
-        showJustModal(desc, async (justif) => {
-            const extra = {};
-            extra[justifKey] = justif;
-            await saveRecord('SALIDA', { ...extra, mensaje });
-        });
-    } else {
-        await saveRecord('SALIDA', { justifSalidaAnticipada:'', justifSalidaTardia:'', mensaje });
-    }
-}
+            if (needsJustif) {
+                const desc = diff < 0
+                    ? `Sales ${Math.abs(diff)} min antes del horario previsto.`
+                    : `Sales ${diff} min después del horario previsto.`;
+                showJustModal(desc, async (justif) => {
+                    const extra = {};
+                    extra[justifKey] = justif;
+                    await saveRecord('SALIDA', { ...extra, mensaje });
+                });
+            } else {
+                await saveRecord('SALIDA', { justifSalidaAnticipada: '', justifSalidaTardia: '', mensaje });
+            }
+        }
 
-async function saveRecord(tipo, { mensaje='', minTarde=0, justifEntrada='', justifSalidaAnticipada='', justifSalidaTardia='' }) {
-    if (isProcessing) return;
-    isProcessing = true;
-    const btn = tipo === 'ENTRADA' ? document.getElementById('btn-in-dash') : document.getElementById('btn-out-dash');
-    setLoading(btn, true);
+        async function saveRecord(tipo, { mensaje = '', minTarde = 0, justifEntrada = '', justifSalidaAnticipada = '', justifSalidaTardia = '' }) {
+            if (isProcessing) return;
+            isProcessing = true;
+            const btn = tipo === 'ENTRADA' ? document.getElementById('btn-in-dash') : document.getElementById('btn-out-dash');
+            setLoading(btn, true);
 
-    try {
-        const now    = new Date();
-        const fecha  = formatDate(now);
-        const hora   = formatTime(now);
-        const semana = `Semana ${getWeekNumber(now)}`;
-        const tarde  = minTarde > 0 ? 1 : null;
+            try {
+                const now = new Date();
+                const fecha = formatDate(now);
+                const hora = formatTime(now);
+                const semana = `Semana ${getWeekNumber(now)}`;
+                const tarde = minTarde > 0 ? 1 : null;
 
-        await tursoQuery(
-            `INSERT INTO asistencias (empresa, fecha, semana, empleado, cedula, area, tipo, hora, minTarde, mensaje, justifEntrada, justifSalidaAnticipada, justifSalidaTardia)
+                await tursoQuery(
+                    `INSERT INTO asistencias (empresa, fecha, semana, empleado, cedula, area, tipo, hora, minTarde, mensaje, justifEntrada, justifSalidaAnticipada, justifSalidaTardia)
              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-            [EMPRESA, fecha, semana, currentEmp.nombre, currentEmp.cedula, currentEmp.area,
-             tipo, hora, minTarde || null, mensaje, justifEntrada||null, justifSalidaAnticipada||null, justifSalidaTardia||null]
-        );
+                    [EMPRESA, fecha, semana, currentEmp.nombre, currentEmp.cedula, currentEmp.area,
+                        tipo, hora, minTarde || null, mensaje, justifEntrada || null, justifSalidaAnticipada || null, justifSalidaTardia || null]
+                );
 
-        await loadTodayRecords();
-        updateStatusUI();
-        renderHistory();
-        showToast(`${tipo === 'ENTRADA' ? 'Entrada' : 'Salida'} registrada — ${hora}`, 'ok');
-    } catch(e) {
-        showToast('Error al guardar. Intenta de nuevo.', 'err');
-    }
-    setLoading(btn, false);
-    isProcessing = false;
-}
+                await loadTodayRecords();
+                updateStatusUI();
+                renderHistory();
+                showToast(`${tipo === 'ENTRADA' ? 'Entrada' : 'Salida'} registrada — ${hora}`, 'ok');
+            } catch (e) {
+                showToast('Error al guardar. Intenta de nuevo.', 'err');
+            }
+            setLoading(btn, false);
+            isProcessing = false;
+        }
 
-// ─────────────────────────────────────────────
-// MODAL JUSTIFICACIÓN
-// ─────────────────────────────────────────────
-function showJustModal(desc, callback) {
-    document.getElementById('modal-just-desc').textContent = desc;
-    document.getElementById('txt-just').value = '';
-    document.getElementById('modal-just').classList.add('active');
-    justifCallback = callback;
-    setTimeout(() => document.getElementById('txt-just').focus(), 300);
-}
+        // ─────────────────────────────────────────────
+        // MODAL JUSTIFICACIÓN
+        // ─────────────────────────────────────────────
+        function showJustModal(desc, callback) {
+            document.getElementById('modal-just-desc').textContent = desc;
+            document.getElementById('txt-just').value = '';
+            document.getElementById('modal-just').classList.add('active');
+            justifCallback = callback;
+            setTimeout(() => document.getElementById('txt-just').focus(), 300);
+        }
 
-function closeJustModal() {
-    document.getElementById('modal-just').classList.remove('active');
-    justifCallback = null;
-}
+        function closeJustModal() {
+            document.getElementById('modal-just').classList.remove('active');
+            justifCallback = null;
+        }
 
-document.getElementById('btn-save-just').addEventListener('click', async () => {
-    const justif = document.getElementById('txt-just').value.trim();
-    const ta = document.getElementById('txt-just');
-    if (!justif) {
-        ta.style.borderColor = 'var(--error)';
-        ta.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
-        ta.focus();
-        ta.placeholder = '⚠ Debes escribir una justificación para continuar...';
-        return;
-    }
-    ta.style.borderColor = '';
-    ta.style.boxShadow = '';
-    const cb = justifCallback;
-    closeJustModal();
-    if (cb) await cb(justif);
-});
+        document.getElementById('btn-save-just').addEventListener('click', async () => {
+            const justif = document.getElementById('txt-just').value.trim();
+            const ta = document.getElementById('txt-just');
+            if (!justif) {
+                ta.style.borderColor = 'var(--error)';
+                ta.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
+                ta.focus();
+                ta.placeholder = '⚠ Debes escribir una justificación para continuar...';
+                return;
+            }
+            ta.style.borderColor = '';
+            ta.style.boxShadow = '';
+            const cb = justifCallback;
+            closeJustModal();
+            if (cb) await cb(justif);
+        });
 
-document.getElementById('modal-just').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('modal-just')) closeJustModal();
-});
+        document.getElementById('modal-just').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-just')) closeJustModal();
+        });
 
-document.getElementById('txt-just').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.ctrlKey) document.getElementById('btn-save-just').click();
-});
+        document.getElementById('txt-just').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) document.getElementById('btn-save-just').click();
+        });
 
-// ─────────────────────────────────────────────
-// LOGOUT
-// ─────────────────────────────────────────────
-function doLogout() {
-    stopWorkTimer();
-    currentEmp = null; empSchedule = null; todayRecords = [];
-    document.getElementById('f-correo').value = '';
-    document.getElementById('f-cedula').value = '';
-    document.getElementById('global-err').classList.remove('show');
-    showView('login-view');
-    showToast('Sesión cerrada.', '');
-}
+        // ─────────────────────────────────────────────
+        // LOGOUT
+        // ─────────────────────────────────────────────
+        function doLogout() {
+            stopWorkTimer();
+            currentEmp = null; empSchedule = null; todayRecords = [];
+            document.getElementById('f-correo').value = '';
+            document.getElementById('f-cedula').value = '';
+            document.getElementById('global-err').classList.remove('show');
+            showView('login-view');
+            showToast('Sesión cerrada.', '');
+        }
 
-// Enter en login
-document.getElementById('f-cedula').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-document.getElementById('f-correo').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('f-cedula').focus(); });
-</script>
+        // Enter en login
+        document.getElementById('f-cedula').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+        document.getElementById('f-correo').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('f-cedula').focus(); });
+
+        // ─────────────────────────────────────────────
+        // AUTO CHECKIN — llamado desde Trinity con ?email=X&empresa=Y
+        // ─────────────────────────────────────────────
+        const AUTO_EMAIL = urlParams.get('email') || '';
+
+        function autoSetState(icon, title, sub, bodyHtml) {
+            const badge = document.getElementById('auto-badge');
+            const titleEl = document.getElementById('auto-title');
+            const subEl = document.getElementById('auto-sub');
+            const body = document.getElementById('auto-body');
+            if (badge) badge.innerHTML = icon;
+            if (titleEl) titleEl.textContent = title;
+            if (subEl) { subEl.textContent = sub; subEl.style.display = sub ? '' : 'none'; }
+            if (body) body.innerHTML = bodyHtml;
+        }
+
+        async function autoCheckinFlow() {
+            showView('auto-view');
+            try {
+                // Buscar empleado por correo
+                const empRows = await tursoQuery(
+                    'SELECT * FROM empleados WHERE empresa=? AND correo=?',
+                    [EMPRESA, AUTO_EMAIL]
+                );
+                if (!empRows.length) {
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+                        'Empleado no encontrado',
+                        'No se encontró tu usuario en este sistema.',
+                        `<p class="footer-hint">Contacta a tu supervisor para registrarte.</p>`
+                    );
+                    document.getElementById('auto-badge').style.background = '#fee2e2';
+                    return;
+                }
+                const emp = empRows[0];
+                const nombre = String(emp.nombre || '').split(' ')[0];
+
+                // Verificar si ya tiene ENTRADA hoy
+                const today = formatDate(new Date());
+                const todayRows = await tursoQuery(
+                    "SELECT id FROM asistencias WHERE empresa=? AND cedula=? AND fecha=? AND tipo='ENTRADA'",
+                    [EMPRESA, emp.cedula, today]
+                );
+                if (todayRows.length) {
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
+                        'Ya estás registrado',
+                        `Hola ${nombre}, tu entrada de hoy ya fue marcada.`,
+                        `<p class="footer-hint" style="margin-top:0">Puedes cerrar esta ventana.</p>`
+                    );
+                    document.getElementById('auto-badge').style.background = '#dcfce7';
+                    return;
+                }
+
+                // Obtener horario
+                const schRows = await tursoQuery(
+                    'SELECT schedule_summary, tolerance FROM horarios WHERE empresa=? AND cedula=?',
+                    [EMPRESA, emp.cedula]
+                );
+                let schedule = null, tolerance = 0;
+                if (schRows.length) {
+                    schedule = parseScheduleSummary(schRows[0].schedule_summary);
+                    tolerance = parseInt(schRows[0].tolerance) || 0;
+                }
+
+                const now = new Date();
+                const todayKey = dayName(now.getDay());
+                const todaySch = schedule?.[todayKey];
+                const nowMins = now.getHours() * 60 + now.getMinutes();
+
+                let lateMins = 0, mensaje = '✅Entrada automática (Trinity)';
+                let needsJustif = false;
+
+                if (todaySch?.activo) {
+                    const entryMins = toMins(todaySch.entrada);
+                    if (entryMins !== null) {
+                        lateMins = nowMins - entryMins;
+                        if (lateMins > tolerance) {
+                            needsJustif = true;
+                            mensaje = '🔴Entrada tardía (Trinity)';
+                        } else if (lateMins > 0) {
+                            mensaje = '🟢Entrada tolerada (Trinity)';
+                        } else {
+                            mensaje = '✅Entrada puntual (Trinity)';
+                        }
+                    }
+                }
+
+                if (needsJustif) {
+                    // Mostrar formulario de justificación (igual que la lógica de la página)
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2.3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>`,
+                        `Llegas ${lateMins} min tarde`,
+                        `Hola ${nombre}, tu horario de hoy era ${todaySch.entrada}.`,
+                        `<div class="global-err show" style="display:block;margin-bottom:16px">
+                            Justifica tu ingreso para registrar la entrada.
+                        </div>
+                        <div class="field">
+                            <label class="field-label">Justificación</label>
+                            <textarea id="auto-just-txt" class="just-textarea" placeholder="Escribe el motivo de tu tardanza…" style="height:100px;margin-bottom:0"></textarea>
+                        </div>
+                        <div id="auto-just-err" class="global-err" style="margin-top:8px;margin-bottom:0"></div>
+                        <button class="btn btn-primary" id="auto-just-btn" onclick="autoSubmitLate(event,'${emp.cedula}','${mensaje}',${lateMins})" style="margin-top:16px">
+                            <div class="btn-spinner"></div>
+                            <span class="btn-lbl">Registrar entrada tardía</span>
+                        </button>`
+                    );
+                    document.getElementById('auto-badge').style.background = 'rgba(234,179,8,0.15)';
+                    setTimeout(() => document.getElementById('auto-just-txt')?.focus(), 200);
+                } else {
+                    // Registrar automáticamente
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+                        'Registrando entrada…',
+                        '',
+                        `<div style="display:flex;justify-content:center;padding:8px 0"><div class="loading-spinner-ring" style="border-top-color:var(--accent)"></div></div>`
+                    );
+                    await autoSaveCheckin(emp.cedula, mensaje, '', lateMins > 0 ? lateMins : 0);
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
+                        'Entrada registrada',
+                        `Hola ${nombre}, tu asistencia fue marcada correctamente.`,
+                        `<p style="text-align:center;color:var(--muted);font-size:13px;font-style:italic">${mensaje}</p>
+                        <p class="footer-hint">Puedes cerrar esta ventana.</p>`
+                    );
+                    document.getElementById('auto-badge').style.background = '#dcfce7';
+                }
+            } catch(e) {
+                autoSetState(
+                    `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+                    'Error de conexión',
+                    'No se pudo verificar la asistencia.',
+                    `<p class="footer-hint">${e.message}</p>`
+                );
+                document.getElementById('auto-badge').style.background = '#fee2e2';
+            }
+        }
+
+        async function autoSubmitLate(e, cedula, mensaje, lateMins) {
+            const btn = document.getElementById('auto-just-btn');
+            const err = document.getElementById('auto-just-err');
+            const justif = document.getElementById('auto-just-txt')?.value.trim() || '';
+            err.classList.remove('show');
+            if (!justif) {
+                err.textContent = 'La justificación es obligatoria.';
+                err.classList.add('show');
+                return;
+            }
+            setLoading(btn, true);
+            try {
+                await autoSaveCheckin(cedula, mensaje, justif, lateMins);
+                autoSetState(
+                    `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
+                    'Entrada registrada',
+                    'Tu asistencia fue marcada con la justificación.',
+                    `<p style="text-align:center;color:var(--muted);font-size:13px;font-style:italic">${mensaje}</p>
+                    <p class="footer-hint">Puedes cerrar esta ventana.</p>`
+                );
+                document.getElementById('auto-badge').style.background = '#dcfce7';
+            } catch(ex) {
+                err.textContent = 'Error al guardar: ' + ex.message;
+                err.classList.add('show');
+                setLoading(btn, false);
+            }
+        }
+
+        async function autoSaveCheckin(cedula, mensaje, justif, lateMins) {
+            const now = new Date();
+            const today = formatDate(now);
+            const hora = formatTime(now);
+            const weekNum = getWeekNumber(now);
+            const semana = `Semana ${weekNum}`;
+            const semana_anio = `${now.getFullYear()}-S${String(weekNum).padStart(2,'0')}`;
+            await tursoQuery(
+                `INSERT INTO asistencias (empresa, cedula, fecha, hora, tipo, semana, semana_anio, mensaje, justifEntrada, minTarde) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                [EMPRESA, cedula, today, hora, 'ENTRADA', semana, semana_anio, mensaje, justif || '', lateMins || 0]
+            );
+        }
+
+        // Activar auto-checkin si vienen los parámetros de Trinity
+        if (AUTO_EMAIL && urlParams.get('empresa')) {
+            autoCheckinFlow();
+        }
+    </script>
 </body>
+
 </html>
