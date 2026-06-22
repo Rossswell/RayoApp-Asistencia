@@ -1960,14 +1960,14 @@
                 );
 
                 await loadTodayRecords();
-                updateStatusUI();
-                renderHistory();
                 showToast(`${tipo === 'ENTRADA' ? 'Entrada' : 'Salida'} registrada — ${hora}`, 'ok');
             } catch (e) {
                 showToast('Error al guardar. Intenta de nuevo.', 'err');
             }
             setLoading(btn, false);
             isProcessing = false;
+            updateStatusUI();
+            renderHistory();
         }
 
         // ─────────────────────────────────────────────
@@ -2206,9 +2206,187 @@
             );
         }
 
-        // Activar auto-checkin si vienen los parámetros de Trinity
+        // AUTO CHECKOUT — llamado desde Trinity con ?email=X&empresa=Y&action=salida
+        async function autoCheckoutFlow() {
+            showView('auto-view');
+            autoSetState(
+                `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+                'Verificando salida…',
+                '',
+                `<div style="display:flex;justify-content:center;padding:8px 0"><div class="loading-spinner-ring" style="border-top-color:var(--accent)"></div></div>`
+            );
+            try {
+                const empRows = await tursoQuery(
+                    'SELECT cedula, nombre, area FROM empleados WHERE empresa=? AND LOWER(correo)=LOWER(?)',
+                    [EMPRESA, AUTO_EMAIL]
+                );
+                if (!empRows.length) {
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+                        'Empleado no encontrado',
+                        'No se encontró tu registro en el sistema.',
+                        `<p class="footer-hint">Contacta a tu supervisor.</p>`
+                    );
+                    document.getElementById('auto-badge').style.background = '#fee2e2';
+                    return;
+                }
+                const emp = empRows[0];
+                const nombre = String(emp.nombre || '').split(' ')[0];
+
+                const today = formatDate(new Date());
+                const salidaRows = await tursoQuery(
+                    "SELECT id FROM asistencias WHERE empresa=? AND cedula=? AND fecha=? AND tipo='SALIDA'",
+                    [EMPRESA, emp.cedula, today]
+                );
+                if (salidaRows.length) {
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
+                        'Salida ya registrada',
+                        `Hola ${nombre}, tu salida de hoy ya fue marcada.`,
+                        `<p class="footer-hint" style="margin-top:0">Puedes cerrar esta ventana.</p>`
+                    );
+                    document.getElementById('auto-badge').style.background = '#dcfce7';
+                    return;
+                }
+
+                const schRows = await tursoQuery(
+                    'SELECT schedule_summary, tolerance FROM horarios WHERE empresa=? AND cedula=?',
+                    [EMPRESA, emp.cedula]
+                );
+                let schedule = null, tolerance = 0;
+                if (schRows.length) {
+                    schedule = parseScheduleSummary(schRows[0].schedule_summary);
+                    tolerance = parseInt(schRows[0].tolerance) || 0;
+                }
+
+                const now = new Date();
+                const todayKey = dayName(now.getDay());
+                const todaySch = schedule?.[todayKey];
+                const nowMins = now.getHours() * 60 + now.getMinutes();
+
+                let reason = null, minDif = 0, needsJustif = false;
+                let mensaje = '✅Salida registrada desde Trinity';
+
+                if (todaySch?.activo) {
+                    const exitMins = toMins(todaySch.salida);
+                    if (exitMins !== null) {
+                        const diff = nowMins - exitMins;
+                        minDif = Math.abs(diff);
+                        if (diff < -tolerance) {
+                            reason = 'temprano';
+                            needsJustif = true;
+                            mensaje = '🟡Salida anticipada (Trinity)';
+                        } else if (diff > tolerance) {
+                            reason = 'tarde';
+                            needsJustif = true;
+                            mensaje = '🔴Salida tardía (Trinity)';
+                        }
+                    }
+                }
+
+                if (needsJustif) {
+                    const esTemp = reason === 'temprano';
+                    const color  = esTemp ? '#b45309' : '#dc2626';
+                    const bg     = esTemp ? 'rgba(234,179,8,0.15)' : '#fee2e2';
+                    const texto  = esTemp
+                        ? `Salís ${minDif} min antes de tu horario (${todaySch.salida}).`
+                        : `Salís ${minDif} min después de tu horario (${todaySch.salida}).`;
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>`,
+                        esTemp ? `Salida anticipada` : `Salida tardía`,
+                        `Hola ${nombre}, ${texto}`,
+                        `<div class="global-err show" style="display:block;margin-bottom:16px">
+                            Justifica tu salida para continuar.
+                        </div>
+                        <div class="field">
+                            <label class="field-label">Justificación</label>
+                            <textarea id="auto-co-just-txt" class="just-textarea" placeholder="Escribe el motivo…" style="height:100px;margin-bottom:0"></textarea>
+                        </div>
+                        <div id="auto-co-just-err" class="global-err" style="margin-top:8px;margin-bottom:0"></div>
+                        <button class="btn btn-primary" id="auto-co-just-btn" onclick="autoSubmitLateCheckout(event,'${emp.cedula}','${(emp.nombre||'').replace(/'/g,"\\'")}','${(emp.area||'').replace(/'/g,"\\'")}','${reason}',${minDif},'${mensaje}')" style="margin-top:16px">
+                            <div class="btn-spinner"></div>
+                            <span class="btn-lbl">Registrar salida</span>
+                        </button>`
+                    );
+                    document.getElementById('auto-badge').style.background = bg;
+                    setTimeout(() => document.getElementById('auto-co-just-txt')?.focus(), 200);
+                } else {
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+                        'Registrando salida…',
+                        '',
+                        `<div style="display:flex;justify-content:center;padding:8px 0"><div class="loading-spinner-ring" style="border-top-color:var(--accent)"></div></div>`
+                    );
+                    await autoSaveCheckout(emp.cedula, emp.nombre || '', emp.area || '', '', '', mensaje);
+                    autoSetState(
+                        `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
+                        'Salida registrada',
+                        `Hola ${nombre}, tu salida fue marcada correctamente.`,
+                        `<p style="text-align:center;color:var(--muted);font-size:13px;font-style:italic">${mensaje}</p>
+                        <p class="footer-hint">Puedes cerrar esta ventana.</p>`
+                    );
+                    document.getElementById('auto-badge').style.background = '#dcfce7';
+                }
+            } catch(e) {
+                autoSetState(
+                    `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+                    'Error de conexión',
+                    'No se pudo verificar la asistencia.',
+                    `<p class="footer-hint">${e.message}</p>`
+                );
+                document.getElementById('auto-badge').style.background = '#fee2e2';
+            }
+        }
+
+        async function autoSubmitLateCheckout(e, cedula, empleado, area, reason, minDif, mensaje) {
+            const btn = document.getElementById('auto-co-just-btn');
+            const err = document.getElementById('auto-co-just-err');
+            const justif = document.getElementById('auto-co-just-txt')?.value.trim() || '';
+            err.classList.remove('show');
+            if (!justif) {
+                err.textContent = 'La justificación es obligatoria.';
+                err.classList.add('show');
+                return;
+            }
+            setLoading(btn, true);
+            try {
+                const justifAnticipada = reason === 'temprano' ? justif : '';
+                const justifTardia     = reason === 'tarde'    ? justif : '';
+                await autoSaveCheckout(cedula, empleado, area, justifAnticipada, justifTardia, mensaje);
+                autoSetState(
+                    `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>`,
+                    'Salida registrada',
+                    'Tu salida fue marcada con la justificación.',
+                    `<p style="text-align:center;color:var(--muted);font-size:13px;font-style:italic">${mensaje}</p>
+                    <p class="footer-hint">Puedes cerrar esta ventana.</p>`
+                );
+                document.getElementById('auto-badge').style.background = '#dcfce7';
+            } catch(ex) {
+                err.textContent = 'Error al guardar: ' + ex.message;
+                err.classList.add('show');
+                setLoading(btn, false);
+            }
+        }
+
+        async function autoSaveCheckout(cedula, empleado, area, justifAnticipada, justifTardia, mensaje) {
+            const now = new Date();
+            const today = formatDate(now);
+            const hora = formatTime(now);
+            const weekNum = getWeekNumber(now);
+            const semana = `Semana ${weekNum}`;
+            await tursoQuery(
+                `INSERT INTO asistencias (empresa, cedula, empleado, area, fecha, hora, tipo, semana, mensaje, justifSalidaAnticipada, justifSalidaTardia) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+                [EMPRESA, cedula, empleado || '', area || '', today, hora, 'SALIDA', semana, mensaje || '✅Salida registrada desde Trinity', justifAnticipada || '', justifTardia || '']
+            );
+        }
+
+        // Activar auto-checkin/checkout si vienen los parámetros de Trinity
         if (AUTO_EMAIL && urlParams.get('empresa')) {
-            autoCheckinFlow();
+            if (urlParams.get('action') === 'salida') {
+                autoCheckoutFlow();
+            } else {
+                autoCheckinFlow();
+            }
         }
     </script>
 </body>
